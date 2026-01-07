@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mohamed Hussein | Full Stack Developer",
-  description: "Portfolio of Mohamed Hussein - Full Stack Developer specializing in React, Next.js, Node.js, and MongoDB. Based in Cairo, Egypt.",
+  title: "Portfolio - Mohamed Hussein",
+  description: "Senior Frontend Developer specializing in React, Next.js, TypeScript and modern web technologies. Based in Cairo, Egypt.",
 };
 
 export default function RootLayout({
@@ -25,9 +25,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <div className="stars-bg" />
         <QueryProvider>
           {children}
         </QueryProvider>
