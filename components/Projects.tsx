@@ -39,6 +39,13 @@ const projects = [
     category: 'Web App',
     description: 'A sleek age calculator that computes exact years, months, and days between dates.',
     link: 'https://age-calculator-sand-rho.vercel.app'
+  },
+  {
+    number: '06',
+    title: 'Second Mind',
+    category: 'Productivity Tool',
+    description: 'Intelligent note-taking application with force-directed graph visualization for connecting ideas.',
+    link: 'https://second-brain-ebon.vercel.app/'
   }
 ];
 
@@ -85,8 +92,8 @@ export default function Projects() {
                 </div>
                 <div className="flex items-center gap-6">
                   <span className="text-gray-500 text-sm hidden lg:block">{project.category}</span>
-                  <ArrowUpRight 
-                    className="w-6 h-6 text-gray-500 group-hover:text-white group-hover:rotate-45 transition-all" 
+                  <ArrowUpRight
+                    className="w-6 h-6 text-gray-500 group-hover:text-white group-hover:rotate-45 transition-all"
                   />
                 </div>
               </Link>

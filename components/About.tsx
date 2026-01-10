@@ -24,7 +24,7 @@ export default function About() {
           {/* Content */}
           <div className="flex flex-col justify-center">
             <p className="text-xl md:text-2xl text-gray-300 leading-relaxed mb-8">
-              I&apos;m a <span className="text-white">Senior Frontend Engineer</span> with over 4 years of experience building high-quality web applications.
+              I&apos;m a <span className="text-white">Frontend Engineer</span> with over 2 years of experience building high-quality web applications.
             </p>
             <p className="text-gray-500 leading-relaxed mb-8">
               I specialize in <span className="text-gray-300">React</span>, <span className="text-gray-300">Next.js</span>, <span className="text-gray-300">TypeScript</span>, and <span className="text-gray-300">Tailwind CSS</span>. I focus on creating scalable architecture, pixel-perfect interfaces, and seamless user experiences. My expertise extends to performance optimization, internationalization, and building reusable component libraries.

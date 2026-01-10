@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Portfolio - Mohamed Hussein",
-  description: "Senior Frontend Developer specializing in React, Next.js, TypeScript and modern web technologies. Based in Cairo, Egypt.",
+  description: "Frontend Developer specializing in React, Next.js, TypeScript and modern web technologies. Based in Cairo, Egypt.",
 };
 
 export default function RootLayout({
