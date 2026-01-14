@@ -23,7 +23,7 @@ const stackCategories = [
 
 export default function Stack() {
   return (
-    <section id="stack" className="py-32 px-6 md:px-16 lg:px-24 bg-gradient-to-b from-transparent via-black/30 to-transparent">
+    <section id="stack" className="py-32 px-6 md:px-16 lg:px-24 bg-linear-to-b from-transparent via-black/30 to-transparent">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -48,7 +48,7 @@ export default function Stack() {
               transition={{ duration: 0.5, delay: catIndex * 0.1 }}
             >
               <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
-                <span className="w-8 h-[1px] bg-white/30" />
+                <span className="w-8 h-px bg-white/30" />
                 {category.title}
               </h3>
               <div className="flex flex-wrap gap-3">

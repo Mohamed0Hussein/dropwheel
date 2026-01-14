@@ -13,7 +13,6 @@ export default function About() {
           transition={{ duration: 0.6 }}
           className="grid grid-cols-1 lg:grid-cols-2 gap-16"
         >
-          {/* Section Title */}
           <div>
             <span className="text-gray-500 text-sm uppercase tracking-widest mb-4 block">About</span>
             <h2 className="font-display text-5xl md:text-6xl lg:text-7xl text-white leading-tight">
@@ -21,7 +20,6 @@ export default function About() {
             </h2>
           </div>
 
-          {/* Content */}
           <div className="flex flex-col justify-center">
             <p className="text-xl md:text-2xl text-gray-300 leading-relaxed mb-8">
               I&apos;m a <span className="text-white">Frontend Engineer</span> with over 2 years of experience building high-quality web applications.

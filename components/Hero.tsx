@@ -4,16 +4,15 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 const stats = [
-  { value: '4+', label: 'Years of Experience' },
+  { value: '2+', label: 'Years of Experience' },
   { value: '10+', label: 'Projects Completed' },
-  { value: '5', label: 'Companies' },
+  { value: '3', label: 'Companies' },
 ];
 
 export default function Hero() {
   return (
     <section className="min-h-screen flex flex-col justify-center relative px-6 md:px-16 lg:px-24">
       <div className="max-w-6xl mx-auto w-full">
-        {/* Main Title */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -27,7 +26,6 @@ export default function Hero() {
           </h1>
         </motion.div>
 
-        {/* Description */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -58,7 +56,6 @@ export default function Hero() {
           </Link>
         </motion.div>
 
-        {/* Stats Bar */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -74,7 +71,6 @@ export default function Hero() {
         </motion.div>
       </div>
 
-      {/* Scroll Indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

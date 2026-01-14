@@ -18,19 +18,17 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Hamburger Menu Button */}
       <motion.button
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-8 right-8 z-[100] p-3 rounded-full border border-white/10 bg-black/50 backdrop-blur-sm hover:bg-white/10 transition-colors"
+        className="fixed top-8 right-8 z-100 p-3 rounded-full border border-white/10 bg-black/50 backdrop-blur-sm hover:bg-white/10 transition-colors"
         aria-label="Toggle menu"
       >
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </motion.button>
 
-      {/* Full Screen Navigation Overlay */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -38,7 +36,7 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[90] bg-black/95 backdrop-blur-xl flex items-center justify-center"
+            className="fixed inset-0 z-90 bg-black/95 backdrop-blur-xl flex items-center justify-center"
           >
             <nav className="flex flex-col items-center gap-8">
               {navLinks.map((link, index) => (
