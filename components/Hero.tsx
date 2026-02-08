@@ -19,7 +19,7 @@ export default function Hero() {
           transition={{ duration: 0.8 }}
           className="mb-8"
         >
-          <h1 className="font-display text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] leading-[0.9] tracking-tight text-white">
+          <h1 className="font-display text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] leading-[0.9] tracking-tight text-gradient">
             FRONTEND
             <br />
             DEVELOPER
@@ -33,8 +33,8 @@ export default function Hero() {
           className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12"
         >
           <div className="max-w-lg">
-            <p className="text-gray-400 text-lg leading-relaxed">
-              Hi, I&apos;m <span className="text-white font-medium">Mohamed Hussein</span>, 
+            <p className="text-lg leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              Hi, I&apos;m <span className="font-medium" style={{ color: 'var(--text-primary)' }}>Mohamed Hussein</span>, 
               a passionate developer creating exceptional digital experiences with modern web technologies.
             </p>
           </div>
@@ -42,7 +42,7 @@ export default function Hero() {
           <Link
             href="https://www.linkedin.com/in/mohamed-hussein-0x1/"
             target="_blank"
-            className="inline-flex items-center gap-3 px-8 py-4 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-colors group self-start md:self-auto"
+            className="btn-primary inline-flex items-center gap-3 px-8 py-4 rounded-full font-semibold group self-start md:self-auto"
           >
             <span>Hire Me</span>
             <svg 
@@ -60,12 +60,13 @@ export default function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="flex flex-wrap gap-8 md:gap-16 pt-8 border-t border-white/10"
+          className="flex flex-wrap gap-8 md:gap-16 pt-8"
+          style={{ borderTop: '1px solid var(--border-primary)' }}
         >
           {stats.map((stat, index) => (
             <div key={index} className="flex items-baseline gap-3">
-              <span className="text-4xl md:text-5xl font-display text-white">{stat.value}</span>
-              <span className="text-gray-500 text-sm uppercase tracking-wider">{stat.label}</span>
+              <span className="text-4xl md:text-5xl font-display text-gradient">{stat.value}</span>
+              <span className="text-sm uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{stat.label}</span>
             </div>
           ))}
         </motion.div>
@@ -80,12 +81,14 @@ export default function Hero() {
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center pt-2"
+          className="w-6 h-10 rounded-full flex justify-center pt-2"
+          style={{ border: '2px solid var(--border-primary)' }}
         >
           <motion.div
             animate={{ opacity: [0.5, 1, 0.5], y: [0, 12, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="w-1 h-2 bg-white rounded-full"
+            className="w-1 h-2 rounded-full"
+            style={{ background: 'var(--text-primary)' }}
           />
         </motion.div>
       </motion.div>

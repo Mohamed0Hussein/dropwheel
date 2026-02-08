@@ -51,7 +51,7 @@ const projects = [
 
 export default function Projects() {
   return (
-    <section id="projects" className="py-32 px-6 md:px-16 lg:px-24 bg-linear-to-b from-transparent via-black/30 to-transparent">
+    <section id="projects" className="py-32 px-6 md:px-16 lg:px-24">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -60,8 +60,8 @@ export default function Projects() {
           transition={{ duration: 0.6 }}
           className="mb-16"
         >
-          <span className="text-gray-500 text-sm uppercase tracking-widest mb-4 block">Portfolio</span>
-          <h2 className="font-display text-5xl md:text-6xl lg:text-7xl text-white">
+          <span className="text-sm uppercase tracking-widest mb-4 block" style={{ color: 'var(--text-secondary)' }}>Portfolio</span>
+          <h2 className="font-display text-5xl md:text-6xl lg:text-7xl" style={{ color: 'var(--text-primary)' }}>
             Selected Projects
           </h2>
         </motion.div>
@@ -79,21 +79,25 @@ export default function Projects() {
                 href={project.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="project-item group flex items-center justify-between py-8 border-b border-white/10 hover:border-white/30 transition-all cursor-pointer"
+                className="project-item group flex items-center justify-between py-8 transition-all cursor-pointer"
+                style={{ 
+                  borderBottom: '1px solid var(--border-primary)',
+                }}
               >
                 <div className="flex items-center gap-8">
-                  <span className="text-gray-600 text-sm font-mono">{project.number}</span>
+                  <span className="text-sm font-mono" style={{ color: 'var(--text-tertiary)' }}>{project.number}</span>
                   <div>
-                    <h3 className="text-2xl md:text-3xl font-semibold text-white group-hover:text-gray-300 transition-colors">
+                    <h3 className="text-2xl md:text-3xl font-semibold group-hover:text-gradient transition-all" style={{ color: 'var(--text-primary)' }}>
                       {project.title}
                     </h3>
-                    <p className="text-gray-500 text-sm mt-1 hidden md:block">{project.description}</p>
+                    <p className="text-sm mt-1 hidden md:block" style={{ color: 'var(--text-tertiary)' }}>{project.description}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-6">
-                  <span className="text-gray-500 text-sm hidden lg:block">{project.category}</span>
+                  <span className="text-sm hidden lg:block" style={{ color: 'var(--text-tertiary)' }}>{project.category}</span>
                   <ArrowUpRight
-                    className="w-6 h-6 text-gray-500 group-hover:text-white group-hover:rotate-45 transition-all"
+                    className="w-6 h-6 group-hover:rotate-45 transition-all"
+                    style={{ color: 'var(--text-secondary)' }}
                   />
                 </div>
               </Link>
@@ -112,7 +116,7 @@ export default function Projects() {
             href="https://github.com/Mohamed0Hussein?tab=repositories"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 px-8 py-4 border border-white/20 rounded-full text-white hover:bg-white hover:text-black transition-all"
+            className="btn-outline inline-flex items-center gap-3 px-8 py-4 rounded-full font-medium"
           >
             View All Projects
             <ArrowUpRight className="w-5 h-5" />

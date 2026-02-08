@@ -15,22 +15,23 @@ export default function Contact() {
           transition={{ duration: 0.6 }}
           className="text-center"
         >
-          <span className="text-gray-500 text-sm uppercase tracking-widest mb-6 block">Contact</span>
+          <span className="text-sm uppercase tracking-widest mb-6 block" style={{ color: 'var(--text-secondary)' }}>Contact</span>
           
-          <h2 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white mb-8 leading-tight">
+          <h2 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-8 leading-tight" style={{ color: 'var(--text-primary)' }}>
             Have a project in mind?
           </h2>
           
-          <p className="text-gray-500 text-lg max-w-xl mx-auto mb-12">
+          <p className="text-lg max-w-xl mx-auto mb-12" style={{ color: 'var(--text-tertiary)' }}>
             I&apos;m always open to discussing new projects, creative ideas, or opportunities to be part of your vision.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link
               href="mailto:mohamed.hussein0x1@gmail.com"
-              className="group inline-flex items-center gap-3 text-2xl md:text-3xl text-white hover:text-gray-400 transition-colors"
+              className="group inline-flex items-center gap-3 text-2xl md:text-3xl hover:text-gradient transition-all"
+              style={{ color: 'var(--text-primary)' }}
             >
-              <span className="border-b-2 border-white group-hover:border-gray-400 transition-colors pb-1">
+              <span className="pb-1" style={{ borderBottom: '2px solid var(--text-primary)' }}>
                 mohamed.hussein0x1@gmail.com
               </span>
               <ArrowUpRight className="w-6 h-6 group-hover:rotate-45 transition-transform" />
@@ -49,23 +50,32 @@ export default function Contact() {
               href="https://github.com/Mohamed0Hussein"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-500 hover:text-white transition-colors text-sm uppercase tracking-wider"
+              className="text-sm uppercase tracking-wider transition-colors"
+              style={{ color: 'var(--text-tertiary)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
             >
               GitHub
             </Link>
-            <span className="text-gray-700">•</span>
+            <span style={{ color: 'var(--border-primary)' }}>•</span>
             <Link
               href="https://www.linkedin.com/in/mohamed-hussein-0x1/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-500 hover:text-white transition-colors text-sm uppercase tracking-wider"
+              className="text-sm uppercase tracking-wider transition-colors"
+              style={{ color: 'var(--text-tertiary)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
             >
               LinkedIn
             </Link>
-            <span className="text-gray-700">•</span>
+            <span style={{ color: 'var(--border-primary)' }}>•</span>
             <Link
               href="tel:+201149247110"
-              className="text-gray-500 hover:text-white transition-colors text-sm uppercase tracking-wider"
+              className="text-sm uppercase tracking-wider transition-colors"
+              style={{ color: 'var(--text-tertiary)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
             >
               Phone
             </Link>
@@ -77,9 +87,10 @@ export default function Contact() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.5 }}
-            className="mt-24 pt-8 border-t border-white/5"
+            className="mt-24 pt-8"
+            style={{ borderTop: '1px solid var(--border-secondary)' }}
           >
-            <p className="text-gray-600 text-sm">
+            <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
               © {new Date().getFullYear()} Mohamed Hussein. All rights reserved.
             </p>
           </motion.div>

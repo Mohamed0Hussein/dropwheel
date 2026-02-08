@@ -23,7 +23,7 @@ const stackCategories = [
 
 export default function Stack() {
   return (
-    <section id="stack" className="py-32 px-6 md:px-16 lg:px-24 bg-linear-to-b from-transparent via-black/30 to-transparent">
+    <section id="stack" className="py-32 px-6 md:px-16 lg:px-24">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -32,8 +32,8 @@ export default function Stack() {
           transition={{ duration: 0.6 }}
           className="mb-16"
         >
-          <span className="text-gray-500 text-sm uppercase tracking-widest mb-4 block">Technologies</span>
-          <h2 className="font-display text-5xl md:text-6xl lg:text-7xl text-white">
+          <span className="text-sm uppercase tracking-widest mb-4 block" style={{ color: 'var(--text-secondary)' }}>Technologies</span>
+          <h2 className="font-display text-5xl md:text-6xl lg:text-7xl" style={{ color: 'var(--text-primary)' }}>
             My Stack
           </h2>
         </motion.div>
@@ -47,15 +47,16 @@ export default function Stack() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: catIndex * 0.1 }}
             >
-              <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
-                <span className="w-8 h-px bg-white/30" />
+              <h3 className="text-xl font-semibold mb-6 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+                <span className="w-8 h-px" style={{ background: 'var(--border-primary)' }} />
                 {category.title}
               </h3>
               <div className="flex flex-wrap gap-3">
                 {category.skills.map((skill) => (
                   <span
                     key={skill}
-                    className="skill-badge px-4 py-2 rounded-full text-sm text-gray-300 cursor-default"
+                    className="skill-badge px-4 py-2 rounded-full text-sm cursor-default"
+                    style={{ color: 'var(--text-secondary)' }}
                   >
                     {skill}
                   </span>
