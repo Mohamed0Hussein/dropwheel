@@ -2,93 +2,146 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { ArrowRight, MapPin } from 'lucide-react';
 
 const stats = [
-  { value: '2+', label: 'Years of Experience' },
-  { value: '10+', label: 'Projects Completed' },
-  { value: '3', label: 'Companies' },
+  { value: '2+', label: 'Years Experience' },
+  { value: '10+', label: 'Projects Shipped' },
+  { value: '30%', label: 'Faster Dev Workflows' },
 ];
 
 export default function Hero() {
   return (
-    <section className="min-h-screen flex flex-col justify-center relative px-6 md:px-16 lg:px-24">
+    <section
+      id="hero"
+      className="min-h-screen flex flex-col justify-center relative px-6 md:px-8 pt-24"
+    >
       <div className="max-w-6xl mx-auto w-full">
+        {/* Status Badge */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
           className="mb-8"
         >
-          <h1 className="font-display text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] leading-[0.9] tracking-tight text-gradient">
-            FRONTEND
+          <div
+            className="inline-flex items-center gap-3 px-4 py-2.5 rounded-full text-sm font-medium"
+            style={{
+              background: 'var(--badge-bg)',
+              border: '1px solid var(--badge-border)',
+              color: 'var(--badge-text)',
+            }}
+          >
+            <span className="status-dot" />
+            Available for new opportunities
+          </div>
+        </motion.div>
+
+        {/* Headline */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="mb-6"
+        >
+          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem]">
+            <span style={{ color: 'var(--text-primary)' }}>
+              I build interfaces
+            </span>
             <br />
-            DEVELOPER
+            <span className="text-gradient">
+              that perform.
+            </span>
           </h1>
         </motion.div>
 
+        {/* Subtitle */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12"
+          transition={{ duration: 0.7, delay: 0.35 }}
+          className="mb-10 max-w-xl"
         >
-          <div className="max-w-lg">
-            <p className="text-lg leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              Hi, I&apos;m <span className="font-medium" style={{ color: 'var(--text-primary)' }}>Mohamed Hussein</span>, 
-              a passionate developer creating exceptional digital experiences with modern web technologies.
-            </p>
-          </div>
-          
-          <Link
-            href="https://www.linkedin.com/in/mohamed-hussein-0x1/"
-            target="_blank"
-            className="btn-primary inline-flex items-center gap-3 px-8 py-4 rounded-full font-semibold group self-start md:self-auto"
+          <p
+            className="text-lg md:text-xl leading-relaxed"
+            style={{ color: 'var(--text-secondary)' }}
           >
-            <span>Hire Me</span>
-            <svg 
-              className="w-5 h-5 transition-transform group-hover:translate-x-1" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
+            Frontend Engineer crafting{' '}
+            <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+              high-performance React applications
+            </span>{' '}
+            with pixel-perfect precision and scalable architecture.
+          </p>
+        </motion.div>
+
+        {/* CTA Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.5 }}
+          className="flex flex-wrap items-center gap-4 mb-20"
+        >
+          <Link href="#projects" className="btn-primary">
+            View My Work
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link href="#contact" className="btn-outline">
+            Hire Me
           </Link>
         </motion.div>
 
+        {/* Stats + Location */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="flex flex-wrap gap-8 md:gap-16 pt-8"
-          style={{ borderTop: '1px solid var(--border-primary)' }}
+          transition={{ duration: 0.7, delay: 0.65 }}
+          className="flex flex-wrap items-center gap-8 md:gap-12 pt-8"
+          style={{ borderTop: '1px solid var(--border)' }}
         >
-          {stats.map((stat, index) => (
-            <div key={index} className="flex items-baseline gap-3">
-              <span className="text-4xl md:text-5xl font-display text-gradient">{stat.value}</span>
-              <span className="text-sm uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{stat.label}</span>
+          {stats.map((stat) => (
+            <div key={stat.label} className="flex items-baseline gap-2.5">
+              <span className="text-3xl md:text-4xl font-bold text-gradient-static">
+                {stat.value}
+              </span>
+              <span
+                className="text-xs md:text-sm uppercase tracking-wider font-medium"
+                style={{ color: 'var(--text-tertiary)' }}
+              >
+                {stat.label}
+              </span>
             </div>
           ))}
+          <div
+            className="flex items-center gap-2 ml-auto"
+            style={{ color: 'var(--text-tertiary)' }}
+          >
+            <MapPin className="w-4 h-4" />
+            <span className="text-sm font-medium">Cairo, Egypt</span>
+          </div>
         </motion.div>
       </div>
 
+      {/* Scroll Indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.5 }}
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+        transition={{ delay: 1.6 }}
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
       >
+        <span className="text-[10px] uppercase tracking-[0.15em] font-medium" style={{ color: 'var(--text-tertiary)' }}>
+          Scroll
+        </span>
         <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="w-6 h-10 rounded-full flex justify-center pt-2"
-          style={{ border: '2px solid var(--border-primary)' }}
+          animate={{ y: [0, 6, 0] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+          className="w-5 h-8 rounded-full flex justify-center pt-1.5"
+          style={{ border: '1.5px solid var(--border-strong)' }}
         >
           <motion.div
-            animate={{ opacity: [0.5, 1, 0.5], y: [0, 12, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-1 h-2 rounded-full"
-            style={{ background: 'var(--text-primary)' }}
+            animate={{ opacity: [0.3, 1, 0.3], y: [0, 10, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-1 h-1.5 rounded-full"
+            style={{ background: 'var(--accent)' }}
           />
         </motion.div>
       </motion.div>

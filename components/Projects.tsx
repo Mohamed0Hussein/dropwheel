@@ -1,125 +1,226 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Github } from 'lucide-react';
 import Link from 'next/link';
 
-const projects = [
+type ProjectType = {
+  title: string;
+  subtitle: string;
+  description: string;
+  tech: string[];
+  live?: string;
+  github?: string;
+  featured?: boolean;
+  gradient: string;
+};
+
+const projects: ProjectType[] = [
   {
-    number: '01',
-    title: 'Talabat ElBeit',
-    category: 'Full-Stack App',
-    description: 'A comprehensive food delivery application with menu browsing, cart management, and order tracking.',
-    link: 'https://github.com/Mohamed0Hussein/Talabat_ElBeit'
-  },
-  {
-    number: '02',
-    title: 'Stories App',
-    category: 'Social Media',
-    description: 'A social media inspired stories application with ephemeral story content similar to Instagram.',
-    link: 'https://stories-app-two.vercel.app'
-  },
-  {
-    number: '03',
-    title: 'Login Form',
-    category: 'Authentication',
-    description: 'Modern, secure authentication form with beautiful UI/UX, validation, and smooth animations.',
-    link: 'https://login-form-five-blue.vercel.app'
-  },
-  {
-    number: '04',
-    title: 'Space Tourism',
-    category: 'Interactive Website',
-    description: 'An immersive space tourism website with beautiful animations exploring destinations and technology.',
-    link: 'https://github.com/Mohamed0Hussein/Space-tourism'
-  },
-  {
-    number: '05',
-    title: 'Age Calculator',
-    category: 'Web App',
-    description: 'A sleek age calculator that computes exact years, months, and days between dates.',
-    link: 'https://age-calculator-sand-rho.vercel.app'
-  },
-  {
-    number: '06',
     title: 'Second Mind',
-    category: 'Productivity Tool',
-    description: 'Intelligent note-taking application with force-directed graph visualization for connecting ideas.',
-    link: 'https://second-brain-ebon.vercel.app/'
-  }
+    subtitle: 'Productivity Tool',
+    description:
+      'Intelligent note-taking with force-directed graph visualization. Connect ideas visually and rediscover insights through interactive knowledge maps.',
+    tech: ['React', 'Next.js', 'TypeScript', 'Canvas API'],
+    live: 'https://second-brain-ebon.vercel.app/',
+    github: 'https://github.com/Mohamed0Hussein/second-brain',
+    featured: true,
+    gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
+  },
+  {
+    title: 'Talabat ElBeit',
+    subtitle: 'Full-Stack Application',
+    description:
+      'End-to-end food delivery platform with real-time cart management, order tracking, and a streamlined checkout experience.',
+    tech: ['React', 'Node.js', 'MongoDB', 'Express'],
+    github: 'https://github.com/Mohamed0Hussein/Talabat_ElBeit',
+    featured: true,
+    gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%)',
+  },
+  {
+    title: 'Stories App',
+    subtitle: 'Social Media',
+    description:
+      'Instagram-inspired ephemeral stories platform with smooth transitions, story progress bars, and swipe navigation.',
+    tech: ['React', 'Next.js', 'Framer Motion', 'CSS'],
+    live: 'https://stories-app-two.vercel.app',
+    featured: true,
+    gradient: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #6366f1 100%)',
+  },
+  {
+    title: 'Space Tourism',
+    subtitle: 'Interactive Website',
+    description:
+      'Immersive multi-page space tourism site with animated page transitions, responsive layouts, and rich visual storytelling.',
+    tech: ['React', 'CSS Modules', 'Framer Motion'],
+    github: 'https://github.com/Mohamed0Hussein/Space-tourism',
+    gradient: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #8b5cf6 100%)',
+  },
+  {
+    title: 'Login Form',
+    subtitle: 'UI Component',
+    description:
+      'Modern authentication form with real-time validation, smooth micro-animations, and accessible design patterns.',
+    tech: ['React', 'TypeScript', 'Framer Motion'],
+    live: 'https://login-form-five-blue.vercel.app',
+    gradient: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+  },
+  {
+    title: 'Age Calculator',
+    subtitle: 'Web App',
+    description:
+      'Precision date calculator with animated number transitions, input validation, and a clean, minimal interface.',
+    tech: ['React', 'TypeScript', 'CSS'],
+    live: 'https://age-calculator-sand-rho.vercel.app',
+    gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 50%, #be123c 100%)',
+  },
 ];
 
-export default function Projects() {
+function ProjectCard({ project, index }: { project: ProjectType; index: number }) {
   return (
-    <section id="projects" className="py-32 px-6 md:px-16 lg:px-24">
-      <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mb-16"
-        >
-          <span className="text-sm uppercase tracking-widest mb-4 block" style={{ color: 'var(--text-secondary)' }}>Portfolio</span>
-          <h2 className="font-display text-5xl md:text-6xl lg:text-7xl" style={{ color: 'var(--text-primary)' }}>
-            Selected Projects
-          </h2>
-        </motion.div>
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.5, delay: index * 0.08 }}
+      className="card group"
+    >
+      {/* Gradient Header Bar */}
+      <div className="h-1.5 w-full" style={{ background: project.gradient }} />
 
-        <div className="project-list space-y-1">
-          {projects.map((project, index) => (
-            <motion.div
-              key={project.number}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
+      <div className="p-6 md:p-7">
+        {/* Category + Featured Tag */}
+        <div className="flex items-center justify-between mb-4">
+          <span
+            className="text-xs font-semibold uppercase tracking-wider"
+            style={{ color: 'var(--text-tertiary)' }}
+          >
+            {project.subtitle}
+          </span>
+          {project.featured && (
+            <span
+              className="text-xs font-medium px-2.5 py-1 rounded-md"
+              style={{
+                background: 'var(--badge-bg)',
+                color: 'var(--badge-text)',
+                border: '1px solid var(--badge-border)',
+              }}
             >
-              <Link
-                href={project.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="project-item group flex items-center justify-between py-8 transition-all cursor-pointer"
-                style={{ 
-                  borderBottom: '1px solid var(--border-primary)',
-                }}
-              >
-                <div className="flex items-center gap-8">
-                  <span className="text-sm font-mono" style={{ color: 'var(--text-tertiary)' }}>{project.number}</span>
-                  <div>
-                    <h3 className="text-2xl md:text-3xl font-semibold group-hover:text-gradient transition-all" style={{ color: 'var(--text-primary)' }}>
-                      {project.title}
-                    </h3>
-                    <p className="text-sm mt-1 hidden md:block" style={{ color: 'var(--text-tertiary)' }}>{project.description}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-6">
-                  <span className="text-sm hidden lg:block" style={{ color: 'var(--text-tertiary)' }}>{project.category}</span>
-                  <ArrowUpRight
-                    className="w-6 h-6 group-hover:rotate-45 transition-all"
-                    style={{ color: 'var(--text-secondary)' }}
-                  />
-                </div>
-              </Link>
-            </motion.div>
+              Featured
+            </span>
+          )}
+        </div>
+
+        {/* Title */}
+        <h3
+          className="text-xl font-bold mb-3 transition-colors duration-300"
+          style={{ color: 'var(--text-primary)', letterSpacing: '-0.01em' }}
+        >
+          {project.title}
+        </h3>
+
+        {/* Description */}
+        <p
+          className="text-sm leading-relaxed mb-5"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          {project.description}
+        </p>
+
+        {/* Tech Stack */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {project.tech.map((tech) => (
+            <span
+              key={tech}
+              className="text-xs font-medium px-2.5 py-1 rounded-md"
+              style={{
+                background: 'var(--code-bg)',
+                color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-mono)',
+              }}
+            >
+              {tech}
+            </span>
           ))}
         </div>
 
+        {/* Action Links */}
+        <div
+          className="flex items-center gap-3 pt-4"
+          style={{ borderTop: '1px solid var(--border)' }}
+        >
+          {project.live && (
+            <Link
+              href={project.live}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-ghost group/link"
+            >
+              Live Demo
+              <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
+            </Link>
+          )}
+          {project.github && (
+            <Link
+              href={project.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-ghost group/link"
+            >
+              <Github className="w-3.5 h-3.5" />
+              Source
+            </Link>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+export default function Projects() {
+  return (
+    <section id="projects" className="py-24 md:py-32 px-6 md:px-8">
+      <div className="max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="mb-12"
+        >
+          <span className="section-label">Portfolio</span>
+          <h2 className="section-title text-4xl md:text-5xl lg:text-6xl mb-4">
+            Selected work
+          </h2>
+          <p className="section-subtitle">
+            Projects that showcase my ability to ship polished, production-grade applications.
+          </p>
+        </motion.div>
+
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {projects.map((project, index) => (
+            <ProjectCard key={project.title} project={project} index={index} />
+          ))}
+        </div>
+
+        {/* View All */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.5 }}
-          className="mt-16 text-center"
+          transition={{ delay: 0.4 }}
+          className="mt-12 text-center"
         >
           <Link
             href="https://github.com/Mohamed0Hussein?tab=repositories"
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-outline inline-flex items-center gap-3 px-8 py-4 rounded-full font-medium"
+            className="btn-outline"
+            style={{ borderRadius: '14px' }}
           >
-            View All Projects
-            <ArrowUpRight className="w-5 h-5" />
+            View All on GitHub
+            <ArrowUpRight className="w-4 h-4" />
           </Link>
         </motion.div>
       </div>

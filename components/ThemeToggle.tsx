@@ -6,11 +6,12 @@ import { useEffect, useState } from 'react';
 
 export default function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState<'dark' | 'light'>('dark');
+  const [currentTheme, setCurrentTheme] = useState<'dark' | 'light'>('light');
 
   useEffect(() => {
     setMounted(true);
-    const savedTheme = (localStorage.getItem('theme') as 'dark' | 'light') || 'dark';
+    const savedTheme = (localStorage.getItem('theme') as 'dark' | 'light') || 
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     setCurrentTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
   }, []);
@@ -24,7 +25,10 @@ export default function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <div className="theme-toggle" style={{ width: '49px', height: '49px', padding: '12px' }}>
+      <div
+        className="theme-toggle"
+        style={{ width: '44px', height: '44px', padding: '10px' }}
+      >
         <div style={{ width: '20px', height: '20px' }} />
       </div>
     );
@@ -34,25 +38,23 @@ export default function ThemeToggle() {
     <motion.button
       onClick={handleToggle}
       className="theme-toggle group"
-      aria-label="Toggle theme"
+      aria-label={`Switch to ${currentTheme === 'dark' ? 'light' : 'dark'} mode`}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
       <motion.div
         className="theme-toggle-inner"
         initial={false}
-        animate={{
-          rotate: currentTheme === 'dark' ? 0 : 180,
-        }}
+        animate={{ rotate: currentTheme === 'dark' ? 0 : 180 }}
         transition={{ duration: 0.5, ease: 'easeInOut' }}
       >
         {currentTheme === 'dark' ? (
-          <Moon className="w-5 h-5" />
+          <Moon className="w-[18px] h-[18px]" />
         ) : (
-          <Sun className="w-5 h-5" />
+          <Sun className="w-[18px] h-[18px]" />
         )}
       </motion.div>
-      <span className="theme-toggle-bg"></span>
+      <span className="theme-toggle-bg" />
     </motion.button>
   );
 }
