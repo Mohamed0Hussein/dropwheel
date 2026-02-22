@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Building2 } from 'lucide-react';
+import { Building2, Calendar, Briefcase } from 'lucide-react';
 
 const experiences = [
   {
@@ -10,10 +10,10 @@ const experiences = [
     company: 'Soshace',
     type: 'Full-time',
     achievements: [
-      'Developed pixel-perfect UI components with 100% design fidelity across 20+ screens',
-      'Led migration from legacy tooling to Vite, achieving 30% faster build times',
-      'Identified and resolved critical production bugs, improving app stability by 40%',
-      'Built reusable component library reducing development time for new features by 25%',
+      'Engineered pixel-perfect UI components with 100% design fidelity architecture across 20+ complex screens.',
+      'Led migration from legacy tooling to Vite, achieving 30% faster build times and improving HMR.',
+      'Identified and resolved critical production bugs, elevating overall app stability by 40%.',
+      'Architected a cohesive reusable component library, slashing development time for new features by 25%.',
     ],
   },
   {
@@ -22,9 +22,9 @@ const experiences = [
     company: 'Envent (prev. Codelabs)',
     type: 'Internship',
     achievements: [
-      'Built a fully functional e-commerce mobile prototype from scratch',
-      'Optimized UI responsiveness and rendering performance using lazy loading',
-      'Collaborated with designers to implement complex animations and transitions',
+      'Single-handedly built a fully functional e-commerce mobile prototype from scratch.',
+      'Optimized UI responsiveness and rendering performance integrating lazy loading and caching.',
+      'Collaborated seamlessly with designers to implement fluid animations and spatial transitions.',
     ],
   },
   {
@@ -33,90 +33,106 @@ const experiences = [
     company: 'iHub',
     type: 'Internship',
     achievements: [
-      'Developed a 3D Kart Racing game using Babylon.js with interactive controls',
-      'Optimized render pipeline, reducing frame lag by 40%',
-      'Implemented real-time physics and collision detection systems',
+      'Developed an immersive 3D Kart Racing game using Babylon.js with highly interactive controls.',
+      'Heavily optimized the render pipeline, reducing overall frame lag by 40%.',
+      'Implemented custom real-time physics and rigorous collision detection systems.',
     ],
   },
 ];
 
 export default function Experience() {
   return (
-    <section id="experience" className="py-24 md:py-32 px-6 md:px-8">
+    <section id="experience" className="py-24 md:py-36 px-6 md:px-8 relative z-10">
       <div className="max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mb-12"
+          initial={{ opacity: 0, scale: 0.98, y: 24 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
+          className="mb-20 text-center md:text-left"
         >
-          <span className="section-label">Career</span>
-          <h2 className="section-title text-4xl md:text-5xl lg:text-6xl mb-4">
-            Experience
+          <span className="section-label">
+            <span className="inline-block w-2h-2 rounded-full bg-accent mr-3 animate-pulse"></span>
+            Career
+          </span>
+          <h2 className="section-title text-5xl md:text-6xl lg:text-7xl mb-6 tracking-tighter">
+            Experience<span className="text-accent">.</span>
           </h2>
-          <p className="section-subtitle">
-            Where I&apos;ve contributed and the impact I&apos;ve made.
+          <p className="section-subtitle font-light md:text-xl">
+            A track record of shipping impactful software, optimizing architecture, and driving results.
           </p>
         </motion.div>
 
         {/* Timeline */}
-        <div className="relative pl-8 md:pl-10">
-          {/* Vertical Line */}
-          <div className="timeline-line" />
+        <div className="relative pl-8 md:pl-12 lg:pl-16">
+          {/* Vertical Line animated */}
+          <motion.div 
+            initial={{ height: 0 }}
+            whileInView={{ height: '100%' }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.5, ease: 'easeInOut' }}
+            className="timeline-line hidden md:block" 
+            style={{ left: 'clamp(17px, 5vw, 30px)' }}
+          />
 
-          <div className="space-y-10">
+          <div className="space-y-16">
             {experiences.map((exp, index) => (
               <motion.div
                 key={exp.company}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-50px' }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="relative"
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-100px' }}
+                transition={{ duration: 0.7, delay: index * 0.2, ease: [0.25, 1, 0.5, 1] }}
+                className="relative group md:pl-8"
               >
                 {/* Timeline Dot */}
                 <div
-                  className="absolute -left-8 md:-left-10 top-1.5"
-                  style={{ left: 'calc(-2rem + 9px)' }}
+                  className="absolute hidden md:block top-6 -left-[2.1rem] lg:-left-[2.9rem] z-10"
                 >
-                  <div className="timeline-dot" />
+                  <div className="timeline-dot transition-transform duration-500 group-hover:scale-125 group-hover:bg-accent" />
                 </div>
 
                 {/* Content Card */}
-                <div className="card p-6 md:p-7">
+                <div className="card p-7 md:p-10 relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -z-10 group-hover:bg-accent/10 transition-colors duration-500"></div>
+                  
                   {/* Header row */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                  <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4 mb-8">
                     <div>
                       <h3
-                        className="text-lg font-bold"
-                        style={{ color: 'var(--text-primary)', letterSpacing: '-0.01em' }}
+                        className="text-2xl font-display font-bold mb-3 group-hover:text-accent transition-colors duration-300"
+                        style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
                       >
                         {exp.role}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Building2 className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-                        <span
-                          className="text-sm font-medium text-gradient-static"
-                        >
-                          {exp.company}
-                        </span>
+                      <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-accent" />
+                          <span className="text-base font-semibold text-gradient-static tracking-wide">
+                            {exp.company}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="w-4 h-4 text-text-tertiary opacity-70" />
+                          <span
+                            className="text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full"
+                            style={{
+                              background: 'var(--badge-bg)',
+                              color: 'var(--badge-text)',
+                              border: '1px solid var(--badge-border)',
+                            }}
+                          >
+                            {exp.type}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    
+                    <div className="flex items-center gap-2 mt-2 xl:mt-0 xl:justify-end">
+                      <Calendar className="w-4 h-4 text-text-tertiary opacity-70" />
                       <span
-                        className="text-xs font-medium px-2.5 py-1 rounded-md"
-                        style={{
-                          background: 'var(--badge-bg)',
-                          color: 'var(--badge-text)',
-                          border: '1px solid var(--badge-border)',
-                        }}
-                      >
-                        {exp.type}
-                      </span>
-                      <span
-                        className="text-xs font-medium whitespace-nowrap"
-                        style={{ color: 'var(--text-tertiary)' }}
+                        className="text-sm font-semibold whitespace-nowrap"
+                        style={{ color: 'var(--text-secondary)' }}
                       >
                         {exp.period}
                       </span>
@@ -124,18 +140,18 @@ export default function Experience() {
                   </div>
 
                   {/* Achievements */}
-                  <ul className="space-y-2.5">
+                  <ul className="space-y-4 pt-4 border-t border-border/50">
                     {exp.achievements.map((achievement, i) => (
                       <li
                         key={i}
-                        className="flex items-start gap-3 text-sm leading-relaxed"
+                        className="flex items-start gap-4 text-[0.95rem] leading-[1.6] group/item"
                         style={{ color: 'var(--text-secondary)' }}
                       >
                         <span
-                          className="shrink-0 w-1.5 h-1.5 rounded-full mt-2"
+                          className="shrink-0 w-1.5 h-1.5 rounded-full mt-2.5 transition-all duration-300 group-hover/item:scale-150"
                           style={{ background: 'var(--accent)' }}
                         />
-                        {achievement}
+                        <span className="group-hover/item:text-text-primary transition-colors duration-300">{achievement}</span>
                       </li>
                     ))}
                   </ul>

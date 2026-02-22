@@ -7,123 +7,129 @@ const highlights = [
   {
     icon: Code2,
     title: 'Clean Architecture',
-    description: 'Scalable, maintainable codebases built with TypeScript and modern design patterns.',
+    description: 'Scalable, maintainable codebases built with TypeScript and advanced design patterns.',
   },
   {
     icon: Layers,
     title: 'Pixel-Perfect UI',
-    description: '100% design fidelity with attention to every detail, spacing, and interaction.',
+    description: '100% design fidelity translated carefully down to the very last pixel and transition delay.',
   },
   {
     icon: Zap,
     title: 'Performance-First',
-    description: 'Optimized rendering, lazy loading, and bundle splitting for fast experiences.',
+    description: 'Relentlessly optimized rendering and smart bundle splitting for instantaneous user experiences.',
   },
 ];
 
 export default function About() {
   return (
-    <section id="about" className="py-24 md:py-32 px-6 md:px-8">
+    <section id="about" className="py-24 md:py-36 px-6 md:px-8 relative z-10">
       <div className="max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.98, y: 24 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.6 }}
-          className="mb-16"
+          transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
+          className="mb-20"
         >
-          <span className="section-label">About</span>
-          <h2 className="section-title text-4xl md:text-5xl lg:text-6xl mb-6">
-            Engineer, not just a coder.
+          <span className="section-label">
+            <span className="inline-block w-2h-2 rounded-full bg-accent mr-3 animate-pulse"></span>
+            Profile
+          </span>
+          <h2 className="section-title text-5xl md:text-6xl lg:text-7xl mb-6 tracking-tighter shadow-sm">
+            Engineer, not just <br className="hidden md:block"/>a coder<span className="text-accent">.</span>
           </h2>
-          <p className="section-subtitle">
-            I don&apos;t just write code — I solve business problems through thoughtful engineering. 
-            My focus is on building products that are fast, accessible, and a joy to use.
+          <p className="section-subtitle font-light md:text-xl">
+            I don&apos;t just write lines of code — I meticulously solve high-impact user problems through thoughtful, creative engineering. My obsession is building digital products that feel instantaneous, accessible, and cinematic.
           </p>
         </motion.div>
 
         {/* Two-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 lg:gap-20 relative">
+          
+          {/* Subtle Graphic background behind About text */}
+          <div className="absolute top-0 right-10 w-96 h-96 bg-accent opacity-5 dark:opacity-10 rounded-full blur-3xl pointer-events-none -z-10" />
+
           {/* Left: Story */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="lg:col-span-2 space-y-6"
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 1, 0.5, 1] }}
+            className="lg:col-span-2 space-y-8"
           >
             <p
-              className="text-lg leading-relaxed"
+              className="text-lg md:text-xl leading-relaxed font-medium"
               style={{ color: 'var(--text-secondary)' }}
             >
               I&apos;m{' '}
-              <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+              <span className="text-gradient">
                 Mohamed Hussein
               </span>
-              , a Frontend Engineer with 2+ years of experience building 
-              production-grade applications for companies across multiple industries.
+              , a Frontend Engineer with 2+ years of relentless experience building 
+              high-traffic, production-grade web applications for dynamic products everywhere.
             </p>
             <p
-              className="leading-relaxed"
+              className="text-base md:text-lg leading-relaxed font-light"
               style={{ color: 'var(--text-tertiary)' }}
             >
-              I specialize in{' '}
-              <span style={{ color: 'var(--text-secondary)' }}>React</span>,{' '}
-              <span style={{ color: 'var(--text-secondary)' }}>Next.js</span>,{' '}
-              <span style={{ color: 'var(--text-secondary)' }}>TypeScript</span>
+              My deep specialization lies in{' '}
+              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>React</span>,{' '}
+              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Next.js</span>,{' '}
+              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>TypeScript</span>
               , and{' '}
-              <span style={{ color: 'var(--text-secondary)' }}>Tailwind CSS</span>. 
-              From building reusable component libraries to optimizing 
-              build pipelines, I care deeply about developer experience 
-              and end-user performance.
+              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Framer Motion</span>. 
+              From orchestrating comprehensive design systems and highly interactive UI components to squeezing every ounce of load performance, I care intensely about developer velocity and end-user joy.
             </p>
-            <p
-              className="leading-relaxed"
-              style={{ color: 'var(--text-tertiary)' }}
-            >
-              Beyond code, I thrive in collaborative environments where 
-              design and engineering work hand-in-hand to ship products 
-              that users love.
-            </p>
+            <div className="pt-4 align-middle">
+              <span className="inline-flex h-full w-0.5 bg-accent/20 rounded mr-6" />
+              <p
+                className="inline-block align-top max-w-[90%] text-base md:text-lg italic leading-relaxed"
+                style={{ color: 'var(--text-tertiary)' }}
+              >
+                &quot;Quality is a habit, not an act. Everything built well stands the test of time.&quot;
+              </p>
+            </div>
           </motion.div>
 
           {/* Right: Highlight Cards */}
-          <div className="lg:col-span-3 space-y-4">
+          <div className="lg:col-span-3 space-y-5">
             {highlights.map((item, index) => (
               <motion.div
                 key={item.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: '-50px' }}
-                transition={{ duration: 0.5, delay: 0.15 + index * 0.1 }}
-                className="card flex items-start gap-5 p-6 group cursor-default"
+                transition={{ duration: 0.6, delay: 0.3 + index * 0.15, ease: [0.25, 1, 0.5, 1] }}
+                className="card flex flex-col sm:flex-row items-start gap-6 p-7 md:p-8 cursor-default group"
               >
                 <div
-                  className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300"
+                  className="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm"
                   style={{
-                    background: 'var(--badge-bg)',
-                    border: '1px solid var(--badge-border)',
+                    background: 'var(--surface-elevated)',
+                    border: '1px solid var(--border)',
                   }}
                 >
                   <item.icon
-                    className="w-5 h-5 transition-colors duration-300"
+                    className="w-6 h-6 transition-all duration-500 scale-100 group-hover:scale-110 drop-shadow-sm"
                     style={{ color: 'var(--accent)' }}
                   />
                 </div>
                 <div>
                   <h3
-                    className="font-semibold mb-1.5"
+                    className="text-xl font-display font-bold mb-2.5 transition-colors duration-300"
                     style={{ color: 'var(--text-primary)' }}
                   >
                     {item.title}
                   </h3>
                   <p
-                    className="text-sm leading-relaxed"
+                    className="text-sm md:text-base leading-relaxed font-medium"
                     style={{ color: 'var(--text-tertiary)' }}
                   >
                     {item.description}
                   </p>
                 </div>
+                <div className="absolute inset-0 border border-transparent group-hover:border-accent/30 rounded-2xl pointer-events-none transition-colors duration-500"></div>
               </motion.div>
             ))}
           </div>

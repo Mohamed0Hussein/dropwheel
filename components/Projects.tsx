@@ -1,8 +1,9 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useMotionTemplate, useMotionValue } from 'framer-motion';
 import { ArrowUpRight, Github } from 'lucide-react';
 import Link from 'next/link';
+import { MouseEvent } from 'react';
 
 type ProjectType = {
   title: string;
@@ -77,64 +78,94 @@ const projects: ProjectType[] = [
 ];
 
 function ProjectCard({ project, index }: { project: ProjectType; index: number }) {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  function handleMouseMove({ currentTarget, clientX, clientY }: MouseEvent) {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  }
+
+  const backgroundGlow = useMotionTemplate`
+    radial-gradient(
+      600px circle at ${mouseX}px ${mouseY}px,
+      var(--accent-glow),
+      transparent 80%
+    )
+  `;
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, scale: 0.95, y: 30 }}
+      whileInView={{ opacity: 1, scale: 1, y: 0 }}
       viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.5, delay: index * 0.08 }}
-      className="card group"
+      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.25, 1, 0.5, 1] }}
+      className="card group relative flex flex-col justify-between"
+      onMouseMove={handleMouseMove}
     >
-      {/* Gradient Header Bar */}
-      <div className="h-1.5 w-full" style={{ background: project.gradient }} />
+      {/* Spotlight Hover Effect */}
+      <motion.div
+        className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition duration-500 group-hover:opacity-100 z-0"
+        style={{ background: backgroundGlow }}
+      />
 
-      <div className="p-6 md:p-7">
+      {/* Gradient Header Bar */}
+      <div 
+        className="h-1.5 w-full absolute top-0 left-0 transition-transform duration-500 origin-left scale-x-100 group-hover:scale-x-105 z-10" 
+        style={{ background: project.gradient }} 
+      />
+
+      <div className="p-7 md:p-8 pt-10 grow z-20 relative bg-background/5 backdrop-blur-sm">
         {/* Category + Featured Tag */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-5">
           <span
-            className="text-xs font-semibold uppercase tracking-wider"
+            className="text-xs font-bold uppercase tracking-[0.2em]"
             style={{ color: 'var(--text-tertiary)' }}
           >
             {project.subtitle}
           </span>
           {project.featured && (
-            <span
-              className="text-xs font-medium px-2.5 py-1 rounded-md"
+            <motion.span
+              whileHover={{ scale: 1.05 }}
+              className="text-xs font-bold px-3 py-1.5 rounded-full shadow-sm"
               style={{
                 background: 'var(--badge-bg)',
                 color: 'var(--badge-text)',
                 border: '1px solid var(--badge-border)',
+                backdropFilter: 'blur(10px)',
               }}
             >
               Featured
-            </span>
+            </motion.span>
           )}
         </div>
 
         {/* Title */}
         <h3
-          className="text-xl font-bold mb-3 transition-colors duration-300"
-          style={{ color: 'var(--text-primary)', letterSpacing: '-0.01em' }}
+          className="text-2xl font-display font-bold mb-4 transition-colors duration-300 group-hover:text-accent group-hover:drop-shadow-sm"
+          style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
         >
           {project.title}
         </h3>
 
         {/* Description */}
         <p
-          className="text-sm leading-relaxed mb-5"
+          className="text-[0.95rem] leading-[1.6] mb-8 font-medium"
           style={{ color: 'var(--text-secondary)' }}
         >
           {project.description}
         </p>
 
         {/* Tech Stack */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-2.5 mb-8">
           {project.tech.map((tech) => (
             <span
               key={tech}
-              className="text-xs font-medium px-2.5 py-1 rounded-md"
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all duration-300 group-hover:border-accent/40"
               style={{
-                background: 'var(--code-bg)',
+                background: 'var(--surface-elevated)',
+                borderColor: 'var(--border-strong)',
                 color: 'var(--text-secondary)',
                 fontFamily: 'var(--font-mono)',
               }}
@@ -146,18 +177,18 @@ function ProjectCard({ project, index }: { project: ProjectType; index: number }
 
         {/* Action Links */}
         <div
-          className="flex items-center gap-3 pt-4"
-          style={{ borderTop: '1px solid var(--border)' }}
+          className="flex items-center gap-4 pt-5 mt-auto relative z-20"
+          style={{ borderTop: '1px solid var(--border-strong)' }}
         >
           {project.live && (
             <Link
               href={project.live}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-ghost group/link"
+              className="btn-primary py-2 px-5 text-sm rounded-xl gap-2 shadow-sm"
             >
               Live Demo
-              <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
+              <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
           )}
           {project.github && (
@@ -165,9 +196,9 @@ function ProjectCard({ project, index }: { project: ProjectType; index: number }
               href={project.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-ghost group/link"
+              className="btn-outline py-2 px-5 text-sm rounded-xl gap-2"
             >
-              <Github className="w-3.5 h-3.5" />
+              <Github className="w-4 h-4" />
               Source
             </Link>
           )}
@@ -179,26 +210,29 @@ function ProjectCard({ project, index }: { project: ProjectType; index: number }
 
 export default function Projects() {
   return (
-    <section id="projects" className="py-24 md:py-32 px-6 md:px-8">
-      <div className="max-w-6xl mx-auto">
+    <section id="projects" className="py-24 md:py-32 px-6 md:px-8 relative z-10">
+      <div className="max-w-6xl mx-auto relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, filter: 'blur(10px)', y: 24 }}
+          whileInView={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mb-12"
+          transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
+          className="mb-14"
         >
-          <span className="section-label">Portfolio</span>
-          <h2 className="section-title text-4xl md:text-5xl lg:text-6xl mb-4">
-            Selected work
+          <span className="section-label group">
+            <span className="inline-block w-2h-2 rounded-full bg-accent mr-3 animate-pulse"></span>
+            Portfolio
+          </span>
+          <h2 className="section-title text-5xl md:text-6xl lg:text-7xl mb-6 tracking-tighter shadow-sm">
+            Selected work<span className="text-accent">.</span>
           </h2>
-          <p className="section-subtitle">
-            Projects that showcase my ability to ship polished, production-grade applications.
+          <p className="section-subtitle font-light md:text-xl">
+            Projects that showcase my ability to ship polished, production-grade applications that blend form and function perfectly.
           </p>
         </motion.div>
 
         {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
           {projects.map((project, index) => (
             <ProjectCard key={project.title} project={project} index={index} />
           ))}
@@ -206,21 +240,20 @@ export default function Projects() {
 
         {/* View All */}
         <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          className="mt-12 text-center"
+          transition={{ delay: 0.5, duration: 0.6 }}
+          className="mt-16 text-center"
         >
           <Link
             href="https://github.com/Mohamed0Hussein?tab=repositories"
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-outline"
-            style={{ borderRadius: '14px' }}
+            className="btn-outline px-8 py-4 rounded-full text-base"
           >
-            View All on GitHub
-            <ArrowUpRight className="w-4 h-4" />
+            Explore all repositories
+            <ArrowUpRight className="w-5 h-5 ml-2" />
           </Link>
         </motion.div>
       </div>

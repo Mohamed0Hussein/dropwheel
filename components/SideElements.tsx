@@ -1,56 +1,49 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 
 export default function SideElements() {
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const { scrollYProgress } = useScroll();
+  const scaleY = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const totalHeight =
-        document.documentElement.scrollHeight - window.innerHeight;
-      const progress = totalHeight > 0 ? (window.scrollY / totalHeight) * 100 : 0;
-      setScrollProgress(progress);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const emailOpacity = useTransform(scrollYProgress, [0.95, 1], [1, 0]);
 
   return (
     <>
       {/* Left: Scroll Progress + Email */}
       <motion.div
-        initial={{ opacity: 0, x: -16 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.2, duration: 0.5 }}
-        className="fixed left-6 top-1/2 -translate-y-1/2 z-30 hidden xl:flex flex-col items-center gap-4"
+        initial={{ opacity: 0, x: -20, filter: 'blur(10px)' }}
+        animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+        transition={{ delay: 1.5, duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
+        className="fixed left-6 md:left-8 top-1/2 -translate-y-1/2 z-40 hidden xl:flex flex-col items-center gap-6"
       >
         <div
-          className="h-20 w-[2px] relative overflow-hidden rounded-full"
+          className="h-24 w-[2px] relative overflow-hidden rounded-full shadow-sm"
           style={{ background: 'var(--border)' }}
         >
-          <div
-            className="absolute top-0 left-0 w-full transition-all duration-200 rounded-full"
+          <motion.div
+            className="absolute top-0 left-0 w-full rounded-full origin-top"
             style={{
-              height: `${scrollProgress}%`,
+              scaleY,
               background: 'linear-gradient(180deg, var(--gradient-from), var(--gradient-to))',
+              height: '100%',
             }}
           />
         </div>
         <div className="flex items-center">
-          <span className="status-dot" style={{ width: '6px', height: '6px' }} />
+          <span className="status-dot" style={{ width: '8px', height: '8px' }} />
         </div>
-        <a
+        <motion.a
+          style={{ opacity: emailOpacity, color: 'var(--text-tertiary)' }}
           href="mailto:mohamed.hussein0x1@gmail.com"
-          className="vertical-text text-[10px] tracking-[0.15em] font-medium transition-colors duration-200"
-          style={{ color: 'var(--text-tertiary)' }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-tertiary)')}
+          className="vertical-text text-[0.65rem] tracking-[0.25em] font-bold transition-colors duration-300 hover:text-accent"
         >
           mohamed.hussein0x1@gmail.com
-        </a>
+        </motion.a>
       </motion.div>
     </>
   );
