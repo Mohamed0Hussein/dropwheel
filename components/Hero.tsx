@@ -108,12 +108,11 @@ export default function Hero() {
 
         {/* Stats + Location */}
         <motion.div
-          style={{ y: y2 }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.55, ease: [0.25, 1, 0.5, 1] }}
           className="flex flex-col md:flex-row md:items-center gap-8 md:gap-14 pt-10"
-          style={{ borderTop: '1px solid var(--border)' }}
+          style={{ borderTop: '1px solid var(--border)', y: y2}}
         >
           <div className="flex flex-wrap gap-8 md:gap-14">
             {stats.map((stat, i) => (
