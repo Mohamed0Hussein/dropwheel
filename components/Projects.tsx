@@ -1,11 +1,11 @@
 'use client';
 
 import { motion, useMotionTemplate, useMotionValue } from 'framer-motion';
-import { ArrowUpRight, Github } from 'lucide-react';
+import { ArrowUpRight, Github, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { MouseEvent } from 'react';
 
-type ProjectType = {
+type Project = {
   title: string;
   subtitle: string;
   description: string;
@@ -14,9 +14,10 @@ type ProjectType = {
   github?: string;
   featured?: boolean;
   gradient: string;
+  pattern: string; // CSS background pattern
 };
 
-const projects: ProjectType[] = [
+const projects: Project[] = [
   {
     title: 'Second Mind',
     subtitle: 'Productivity Tool',
@@ -27,6 +28,7 @@ const projects: ProjectType[] = [
     github: 'https://github.com/Mohamed0Hussein/second-brain',
     featured: true,
     gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
+    pattern: 'radial-gradient(circle at 20% 80%, rgba(99,102,241,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(168,85,247,0.3) 0%, transparent 50%)',
   },
   {
     title: 'Talabat ElBeit',
@@ -37,6 +39,7 @@ const projects: ProjectType[] = [
     github: 'https://github.com/Mohamed0Hussein/Talabat_ElBeit',
     featured: true,
     gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%)',
+    pattern: 'radial-gradient(circle at 30% 70%, rgba(245,158,11,0.4) 0%, transparent 50%), radial-gradient(circle at 70% 30%, rgba(236,72,153,0.3) 0%, transparent 50%)',
   },
   {
     title: 'Stories App',
@@ -47,6 +50,7 @@ const projects: ProjectType[] = [
     live: 'https://stories-app-two.vercel.app',
     featured: true,
     gradient: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #6366f1 100%)',
+    pattern: 'radial-gradient(circle at 20% 20%, rgba(6,182,212,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(99,102,241,0.3) 0%, transparent 50%)',
   },
   {
     title: 'Space Tourism',
@@ -56,6 +60,7 @@ const projects: ProjectType[] = [
     tech: ['React', 'CSS Modules', 'Framer Motion'],
     github: 'https://github.com/Mohamed0Hussein/Space-tourism',
     gradient: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #8b5cf6 100%)',
+    pattern: 'radial-gradient(circle at 50% 50%, rgba(14,165,233,0.4) 0%, transparent 60%)',
   },
   {
     title: 'Login Form',
@@ -65,6 +70,7 @@ const projects: ProjectType[] = [
     tech: ['React', 'TypeScript', 'Framer Motion'],
     live: 'https://login-form-five-blue.vercel.app',
     gradient: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+    pattern: 'radial-gradient(circle at 30% 50%, rgba(16,185,129,0.4) 0%, transparent 55%)',
   },
   {
     title: 'Age Calculator',
@@ -74,10 +80,12 @@ const projects: ProjectType[] = [
     tech: ['React', 'TypeScript', 'CSS'],
     live: 'https://age-calculator-sand-rho.vercel.app',
     gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 50%, #be123c 100%)',
+    pattern: 'radial-gradient(circle at 70% 30%, rgba(244,63,94,0.4) 0%, transparent 55%)',
   },
 ];
 
-function ProjectCard({ project, index }: { project: ProjectType; index: number }) {
+/* ── Individual card ── */
+function ProjectCard({ project, index }: { project: Project; index: number }) {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -87,82 +95,96 @@ function ProjectCard({ project, index }: { project: ProjectType; index: number }
     mouseY.set(clientY - top);
   }
 
-  const backgroundGlow = useMotionTemplate`
-    radial-gradient(
-      600px circle at ${mouseX}px ${mouseY}px,
-      var(--accent-glow),
-      transparent 80%
-    )
-  `;
+  const spotlightBg = useMotionTemplate`radial-gradient(550px circle at ${mouseX}px ${mouseY}px, var(--accent-glow), transparent 80%)`;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 30 }}
-      whileInView={{ opacity: 1, scale: 1, y: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.25, 1, 0.5, 1] }}
-      className="card group relative flex flex-col justify-between"
+    <motion.article
+      initial={{ opacity: 0, y: 32, scale: 0.96 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.65, delay: index * 0.08, ease: [0.25, 1, 0.5, 1] }}
+      className="card group relative flex flex-col gradient-border-card"
       onMouseMove={handleMouseMove}
     >
-      {/* Spotlight Hover Effect */}
+      {/* Mouse spotlight */}
       <motion.div
-        className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition duration-500 group-hover:opacity-100 z-0"
-        style={{ background: backgroundGlow }}
+        className="pointer-events-none absolute -inset-px rounded-[20px] opacity-0 transition duration-500 group-hover:opacity-100 z-0"
+        style={{ background: spotlightBg }}
       />
 
-      {/* Gradient Header Bar */}
-      <div 
-        className="h-1.5 w-full absolute top-0 left-0 transition-transform duration-500 origin-left scale-x-100 group-hover:scale-x-105 z-10" 
-        style={{ background: project.gradient }} 
-      />
+      {/* Preview header */}
+      <div
+        className="project-preview rounded-t-[20px]"
+        style={{ background: project.pattern, backgroundColor: 'rgba(0,0,0,0.05)' }}
+        aria-hidden
+      >
+        {/* Geometric decoration */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div
+            className="w-16 h-16 rounded-2xl rotate-12 opacity-20 border-2 border-white"
+            style={{ background: 'rgba(255,255,255,0.15)' }}
+          />
+          <div
+            className="absolute w-24 h-24 rounded-3xl -rotate-6 opacity-10 border border-white"
+            style={{ background: 'rgba(255,255,255,0.1)' }}
+          />
+        </div>
 
-      <div className="p-7 md:p-8 pt-10 grow z-20 relative bg-background/5 backdrop-blur-sm">
-        {/* Category + Featured Tag */}
-        <div className="flex items-center justify-between mb-5">
-          <span
-            className="text-xs font-bold uppercase tracking-[0.2em]"
-            style={{ color: 'var(--text-tertiary)' }}
-          >
-            {project.subtitle}
-          </span>
+        {/* Gradient accent bar at top */}
+        <div
+          className="absolute top-0 left-0 right-0 h-1 rounded-t-[20px] transition-transform duration-500 origin-left"
+          style={{ background: project.gradient }}
+        />
+
+        {/* Featured / subtitle chip */}
+        <div className="absolute top-4 right-4 flex gap-2">
           {project.featured && (
-            <motion.span
-              whileHover={{ scale: 1.05 }}
-              className="text-xs font-bold px-3 py-1.5 rounded-full shadow-sm"
+            <span
+              className="text-[10px] font-bold px-2.5 py-1 rounded-full border backdrop-blur-md"
               style={{
-                background: 'var(--badge-bg)',
-                color: 'var(--badge-text)',
-                border: '1px solid var(--badge-border)',
-                backdropFilter: 'blur(10px)',
+                background: 'rgba(255,255,255,0.12)',
+                borderColor: 'rgba(255,255,255,0.25)',
+                color: '#ffffff',
               }}
             >
               Featured
-            </motion.span>
+            </span>
           )}
         </div>
+      </div>
+
+      {/* Card body */}
+      <div className="flex flex-col flex-1 p-7 pt-6 relative z-10">
+        {/* Category label */}
+        <span
+          className="text-[0.65rem] font-bold uppercase tracking-[0.22em] mb-3"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
+          {project.subtitle}
+        </span>
 
         {/* Title */}
         <h3
-          className="text-2xl font-display font-bold mb-4 transition-colors duration-300 group-hover:text-accent group-hover:drop-shadow-sm"
-          style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
+          className="text-xl font-display font-bold mb-3 transition-colors duration-300 group-hover:text-accent tracking-tight"
+          style={{ color: 'var(--text-primary)' }}
         >
           {project.title}
         </h3>
 
         {/* Description */}
         <p
-          className="text-[0.95rem] leading-[1.6] mb-8 font-medium"
+          className="text-[0.9rem] leading-relaxed mb-6 font-medium flex-1"
           style={{ color: 'var(--text-secondary)' }}
         >
           {project.description}
         </p>
 
-        {/* Tech Stack */}
-        <div className="flex flex-wrap gap-2.5 mb-8">
-          {project.tech.map((tech) => (
+        {/* Tech tags */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {project.tech.map((t) => (
             <span
-              key={tech}
-              className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all duration-300 group-hover:border-accent/40"
+              key={t}
+              className="text-[0.7rem] font-semibold px-2.5 py-1 rounded-lg border transition-all duration-300 group-hover:border-accent/40"
               style={{
                 background: 'var(--surface-elevated)',
                 borderColor: 'var(--border-strong)',
@@ -170,91 +192,100 @@ function ProjectCard({ project, index }: { project: ProjectType; index: number }
                 fontFamily: 'var(--font-mono)',
               }}
             >
-              {tech}
+              {t}
             </span>
           ))}
         </div>
 
-        {/* Action Links */}
+        {/* Links */}
         <div
-          className="flex items-center gap-4 pt-5 mt-auto relative z-20"
+          className="flex items-center gap-3 pt-5 mt-auto"
           style={{ borderTop: '1px solid var(--border-strong)' }}
         >
           {project.live && (
-            <Link
-              href={project.live}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary py-2 px-5 text-sm rounded-xl gap-2 shadow-sm"
-            >
-              Live Demo
-              <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </Link>
+            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+              <Link
+                href={project.live}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary py-2! px-5! text-sm! rounded-xl gap-1.5"
+                aria-label={`Live demo of ${project.title}`}
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Live Demo
+              </Link>
+            </motion.div>
           )}
           {project.github && (
-            <Link
-              href={project.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-outline py-2 px-5 text-sm rounded-xl gap-2"
-            >
-              <Github className="w-4 h-4" />
-              Source
-            </Link>
+            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+              <Link
+                href={project.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-outline py-2! px-5! text-sm! rounded-xl gap-1.5"
+                aria-label={`Source code of ${project.title}`}
+              >
+                <Github className="w-3.5 h-3.5" />
+                Source
+              </Link>
+            </motion.div>
           )}
         </div>
       </div>
-    </motion.div>
+    </motion.article>
   );
 }
 
 export default function Projects() {
   return (
     <section id="projects" className="py-24 md:py-32 px-6 md:px-8 relative z-10">
-      <div className="max-w-6xl mx-auto relative z-10">
+      <div className="max-w-6xl mx-auto">
+
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, filter: 'blur(10px)', y: 24 }}
-          whileInView={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
-          className="mb-14"
+          className="mb-16"
         >
-          <span className="section-label group">
-            <span className="inline-block w-2h-2 rounded-full bg-accent mr-3 animate-pulse"></span>
-            Portfolio
-          </span>
-          <h2 className="section-title text-5xl md:text-6xl lg:text-7xl mb-6 tracking-tighter shadow-sm">
+          <span className="section-label">Portfolio</span>
+          <h2 className="section-title text-5xl md:text-6xl lg:text-7xl mb-5 tracking-tighter">
             Selected work<span className="text-accent">.</span>
           </h2>
           <p className="section-subtitle font-light md:text-xl">
-            Projects that showcase my ability to ship polished, production-grade applications that blend form and function perfectly.
+            Projects that showcase my ability to ship polished, production-grade applications
+            that blend form and function perfectly.
           </p>
         </motion.div>
 
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+        {/* Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {projects.map((project, index) => (
             <ProjectCard key={project.title} project={project} index={index} />
           ))}
         </div>
 
-        {/* View All */}
+        {/* View all CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="mt-16 text-center"
+          transition={{ delay: 0.4, duration: 0.6 }}
+          className="mt-14 text-center"
         >
-          <Link
-            href="https://github.com/Mohamed0Hussein?tab=repositories"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-outline px-8 py-4 rounded-full text-base"
-          >
-            Explore all repositories
-            <ArrowUpRight className="w-5 h-5 ml-2" />
-          </Link>
+          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="inline-block">
+            <Link
+              href="https://github.com/Mohamed0Hussein?tab=repositories"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-outline px-8 py-4 rounded-full text-base"
+              aria-label="Explore all GitHub repositories"
+            >
+              Explore all repositories
+              <ArrowUpRight className="w-5 h-5" />
+            </Link>
+          </motion.div>
         </motion.div>
       </div>
     </section>

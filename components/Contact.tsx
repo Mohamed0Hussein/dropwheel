@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowUpRight, Mail, Linkedin, Github, Phone } from 'lucide-react';
+import { ArrowUpRight, Mail, Linkedin, Github, Phone, Sparkles } from 'lucide-react';
 
 const socials = [
   {
@@ -11,6 +11,7 @@ const socials = [
     icon: Mail,
     label: 'mohamed.hussein0x1@gmail.com',
     external: false,
+    color: '#6366f1',
   },
   {
     name: 'LinkedIn',
@@ -18,6 +19,7 @@ const socials = [
     icon: Linkedin,
     label: 'linkedin.com/in/mohamed-hussein-0x1',
     external: true,
+    color: '#0077b5',
   },
   {
     name: 'GitHub',
@@ -25,6 +27,7 @@ const socials = [
     icon: Github,
     label: 'github.com/Mohamed0Hussein',
     external: true,
+    color: '#8b5cf6',
   },
   {
     name: 'Phone',
@@ -32,105 +35,155 @@ const socials = [
     icon: Phone,
     label: '+20 114 924 7110',
     external: false,
+    color: '#10b981',
   },
 ];
 
+const cardVariants = {
+  hidden:  { opacity: 0, y: 20 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, delay: 0.3 + i * 0.1, ease: [0.25, 1, 0.5, 1] },
+  }),
+};
+
 export default function Contact() {
   return (
-    <section id="contact" className="py-24 md:py-36 px-6 md:px-8 relative z-10">
+    <section id="contact" className="py-24 md:py-36 px-6 md:px-8 relative z-10 overflow-hidden">
+
+      {/* Large ambient background */}
+      <div
+        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full blur-3xl pointer-events-none -z-10 opacity-30"
+        style={{ background: 'radial-gradient(ellipse, var(--mesh-1), var(--mesh-2), transparent)' }}
+      />
+
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
-          {/* Left: CTA */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
+
+          {/* ── Left: CTA ── */}
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-100px' }}
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
             transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
-            className="relative"
           >
-            <div className="absolute -top-20 -left-20 w-64 h-64 bg-accent opacity-10 blur-3xl rounded-full pointer-events-none -z-10" />
-            
-            <span className="section-label">
-              <span className="inline-block w-2h-2 rounded-full bg-accent mr-3 animate-pulse"></span>
-              Contact
-            </span>
+            <span className="section-label">Contact</span>
             <h2 className="section-title text-5xl md:text-6xl lg:text-7xl mb-6 tracking-tighter">
               Let&apos;s build <br />
               <span className="text-gradient">something great.</span>
             </h2>
             <p className="section-subtitle mb-10 text-lg md:text-xl font-light">
-              I&apos;m currently open to new opportunities. Whether you have a question, a project idea, or just want to say hi, my inbox is always open.
+              I&apos;m currently open to new opportunities. Whether you have a question, a project
+              idea, or just want to say hi — my inbox is always open.
             </p>
-            <Link
-              href="mailto:mohamed.hussein0x1@gmail.com"
-              className="btn-primary inline-flex scale-100 hover:scale-[1.03] transition-transform duration-500 shadow-xl"
+
+            {/* Primary CTA */}
+            <motion.div
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              className="inline-block"
             >
-              <Mail className="w-5 h-5 mr-1" />
-              Say Hello
-              <ArrowUpRight className="w-5 h-5 ml-1" />
-            </Link>
+              <Link
+                href="mailto:mohamed.hussein0x1@gmail.com"
+                className="btn-primary shadow-xl"
+                aria-label="Send me an email"
+              >
+                <Mail className="w-5 h-5" />
+                Say Hello
+                <ArrowUpRight className="w-4 h-4" />
+              </Link>
+            </motion.div>
+
+            {/* Availability note */}
+            <div className="mt-8 flex items-center gap-3">
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold"
+                style={{
+                  background: 'rgba(34,197,94,0.08)',
+                  border: '1px solid rgba(34,197,94,0.2)',
+                  color: '#22c55e',
+                }}
+              >
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                Open to opportunities
+              </div>
+              <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
+                · Typically replies within 24 h
+              </span>
+            </div>
+
+            {/* Decorative sparkle accent */}
+            <motion.div
+              animate={{ rotate: [0, 15, 0, -15, 0], scale: [1, 1.1, 1] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -left-6 top-1/2 hidden xl:block"
+              aria-hidden
+            >
+              <Sparkles className="w-8 h-8 opacity-20" style={{ color: 'var(--accent)' }} />
+            </motion.div>
           </motion.div>
 
-          {/* Right: Social Links */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-100px' }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 1, 0.5, 1] }}
-            className="flex flex-col justify-center gap-4 relative"
-          >
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-linear-to-br from-accent/5 via-transparent to-transparent opacity-50 blur-2xl rounded-full pointer-events-none -z-10" />
-
+          {/* ── Right: Social links ── */}
+          <div className="flex flex-col gap-3.5">
             {socials.map((social, index) => (
               <motion.div
                 key={social.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                variants={cardVariants}
+                initial="hidden"
+                whileInView="visible"
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.3 + index * 0.1, ease: [0.25, 1, 0.5, 1] }}
+                custom={index}
               >
-                <Link
-                  href={social.href}
-                  target={social.external ? '_blank' : undefined}
-                  rel={social.external ? 'noopener noreferrer' : undefined}
-                  className="card flex items-center gap-5 p-5 md:p-6 group hover:-translate-y-1 hover:shadow-xl transition-all duration-400"
-                  style={{ borderRadius: '20px' }}
-                  id={`contact-${social.name.toLowerCase()}`}
-                  aria-label={social.name}
-                >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:scale-110 shadow-sm"
-                    style={{
-                      background: 'var(--badge-bg)',
-                      border: '1px solid var(--badge-border)',
-                    }}
+                <motion.div whileHover={{ x: 4 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+                  <Link
+                    href={social.href}
+                    target={social.external ? '_blank' : undefined}
+                    rel={social.external ? 'noopener noreferrer' : undefined}
+                    className="card group flex items-center gap-5 p-5 hover:shadow-xl transition-shadow duration-400"
+                    id={`contact-${social.name.toLowerCase()}`}
+                    aria-label={`Connect on ${social.name}`}
                   >
-                    <social.icon
-                      className="w-5 h-5 group-hover:text-accent transition-colors duration-300"
-                      style={{ color: 'var(--text-secondary)' }}
+                    {/* Icon */}
+                    <div
+                      className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-400 group-hover:scale-110"
+                      style={{
+                        background: `${social.color}15`,
+                        border: `1px solid ${social.color}30`,
+                      }}
+                    >
+                      <social.icon
+                        className="w-5 h-5 transition-colors duration-300"
+                        style={{ color: social.color }}
+                      />
+                    </div>
+
+                    {/* Text */}
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="text-[0.65rem] font-bold uppercase tracking-[0.2em] mb-0.5"
+                        style={{ color: 'var(--text-tertiary)' }}
+                      >
+                        {social.name}
+                      </p>
+                      <p
+                        className="text-sm font-semibold truncate transition-colors duration-300 group-hover:text-accent"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
+                        {social.label}
+                      </p>
+                    </div>
+
+                    {/* Arrow */}
+                    <ArrowUpRight
+                      className="w-4 h-4 shrink-0 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
+                      style={{ color: 'var(--accent)' }}
                     />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="text-[0.7rem] font-bold uppercase tracking-[0.2em] mb-1 group-hover:text-accent transition-colors duration-300"
-                      style={{ color: 'var(--text-tertiary)' }}
-                    >
-                      {social.name}
-                    </p>
-                    <p
-                      className="text-base font-semibold truncate transition-colors duration-300"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
-                      {social.label}
-                    </p>
-                  </div>
-                  <ArrowUpRight
-                    className="w-5 h-5 shrink-0 transition-all duration-300 text-text-tertiary opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-accent"
-                  />
-                </Link>
+                  </Link>
+                </motion.div>
               </motion.div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
