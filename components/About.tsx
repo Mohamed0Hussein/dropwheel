@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { Code2, Layers, Zap } from 'lucide-react';
 
 const highlights = [
@@ -27,12 +27,12 @@ const highlights = [
   },
 ];
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden:  {},
   visible: { transition: { staggerChildren: 0.15, delayChildren: 0.2 } },
 };
 
-const cardVariants = {
+const cardVariants: Variants = {
   hidden:  { opacity: 0, x: 24 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.65, ease: [0.25, 1, 0.5, 1] } },
 };

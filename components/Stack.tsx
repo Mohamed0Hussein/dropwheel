@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 
 /* ── Data ── */
 const row1 = [
@@ -58,12 +58,12 @@ function SkillPill({ label }: { label: string }) {
 }
 
 /* ── Container variants for stagger ── */
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.12 } },
 };
 
-const cardVariants = {
+const cardVariants: Variants = {
   hidden:  { opacity: 0, y: 28, scale: 0.97 },
   visible: { opacity: 1, y: 0,  scale: 1,    transition: { duration: 0.65, ease: [0.25, 1, 0.5, 1] } },
 };

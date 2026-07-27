@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useMotionValueEvent, Variants } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import ThemeToggle from './ThemeToggle';
@@ -15,7 +15,7 @@ const navLinks = [
   { name: 'Contact',    href: '#contact'    },
 ];
 
-const mobileMenuVariants = {
+const mobileMenuVariants: Variants = {
   hidden: { opacity: 0, clipPath: 'inset(0 0 100% 0 round 16px)' },
   visible: {
     opacity: 1,
@@ -35,7 +35,7 @@ const linkStagger = {
   exit:    { transition: { staggerChildren: 0.04, staggerDirection: -1 } },
 };
 
-const linkItem = {
+const linkItem: Variants = {
   hidden:  { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0,  transition: { duration: 0.4, ease: [0.25, 1, 0.5, 1] } },
   exit:    { opacity: 0, y: -16, transition: { duration: 0.25 } },
@@ -68,8 +68,8 @@ export default function Navbar() {
         <div className="max-w-6xl mx-auto">
           <motion.div
             animate={isScrolled
-              ? { backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }
-              : { backdropFilter: 'blur(0px)', WebkitBackdropFilter: 'blur(0px)' }
+              ? ({ backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' } as any)
+              : ({ backdropFilter: 'blur(0px)', WebkitBackdropFilter: 'blur(0px)' } as any)
             }
             transition={{ duration: 0.4 }}
             className={`flex items-center justify-between transition-all duration-500 ${
