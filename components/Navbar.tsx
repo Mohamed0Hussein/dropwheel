@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent, Variants } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
@@ -47,6 +47,8 @@ export default function Navbar() {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const activeSection = useActiveSection();
   const { scrollY } = useScroll();
+  const menuToggleRef = useRef<HTMLButtonElement>(null);
+  const firstMobileLinkRef = useRef<HTMLAnchorElement>(null);
 
   useMotionValueEvent(scrollY, 'change', (latest) => {
     setIsScrolled(latest > 50);
@@ -54,7 +56,24 @@ export default function Navbar() {
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
+    if (isOpen) {
+      // Move focus into the overlay once its enter animation mounts it.
+      const id = requestAnimationFrame(() => firstMobileLinkRef.current?.focus());
+      return () => cancelAnimationFrame(id);
+    }
     return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        menuToggleRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, [isOpen]);
 
   return (
@@ -152,9 +171,12 @@ export default function Navbar() {
                 </Link>
               </motion.div>
               <button
+                ref={menuToggleRef}
                 onClick={() => setIsOpen(!isOpen)}
                 className="md:hidden glass p-2.5 rounded-xl transition-all hover:scale-105 active:scale-95"
                 aria-label={isOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={isOpen}
+                aria-controls="mobile-nav-menu"
                 id="mobile-menu-toggle"
               >
                 <AnimatePresence mode="wait" initial={false}>
@@ -179,6 +201,10 @@ export default function Navbar() {
             exit="exit"
             className="fixed inset-0 z-40 flex flex-col items-center justify-center"
             style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)' }}
+            id="mobile-nav-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation"
           >
             {/* Accent blob */}
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-3xl pointer-events-none" style={{ background: 'var(--mesh-1)' }} />
@@ -191,12 +217,13 @@ export default function Navbar() {
               className="flex flex-col items-center gap-6 w-full px-8"
               aria-label="Mobile navigation"
             >
-              {navLinks.map((link) => {
+              {navLinks.map((link, i) => {
                 const sectionId = link.href.slice(1);
                 const isActive  = activeSection === sectionId;
                 return (
                   <motion.div key={link.name} variants={linkItem}>
                     <Link
+                      ref={i === 0 ? firstMobileLinkRef : undefined}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
                       className="relative text-4xl font-display font-bold group"

@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/components/QueryProvider";
+import CustomCursor from "@/components/CustomCursor";
+import ReadingProgressBar from "@/components/ReadingProgressBar";
 
 const inter = Inter({
   variable: "--font-geist-sans",
   subsets: ["latin"],
   display: "swap",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
@@ -51,6 +54,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+          rel="stylesheet"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -70,10 +79,15 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} antialiased`}>
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <div className="mesh-bg" />
         <div className="mesh-bg-third" />
         <div className="grid-overlay" />
         <div className="noise" />
+        <ReadingProgressBar />
+        <CustomCursor />
         <QueryProvider>{children}</QueryProvider>
       </body>
     </html>

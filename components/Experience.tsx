@@ -1,7 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Building2, Calendar, Briefcase, TrendingUp } from 'lucide-react';
+import { Building2, Calendar, Briefcase } from 'lucide-react';
+import ExpandableExperienceCard from './ExpandableExperienceCard';
 
 const experiences = [
   {
@@ -10,7 +11,9 @@ const experiences = [
     company: 'Soshace',
     type: 'Full-time',
     current: true,
-    gradient: 'from-indigo-500 to-violet-500',
+    gradient: 'linear-gradient(135deg, #7c3aed, #3b82f6)',
+    accentColor: '#7c3aed',
+    dotColor: '#7c3aed',
     achievements: [
       'Engineered pixel-perfect UI components with 100% design fidelity architecture across 20+ complex screens.',
       'Led migration from legacy tooling to Vite, achieving 30% faster build times and improving HMR.',
@@ -24,7 +27,9 @@ const experiences = [
     company: 'Envent (prev. Codelabs)',
     type: 'Internship',
     current: false,
-    gradient: 'from-amber-500 to-orange-500',
+    gradient: 'linear-gradient(135deg, #3b82f6, #0ea5e9)',
+    accentColor: '#3b82f6',
+    dotColor: '#3b82f6',
     achievements: [
       'Single-handedly built a fully functional e-commerce mobile prototype from scratch.',
       'Optimized UI responsiveness and rendering performance integrating lazy loading and caching.',
@@ -37,7 +42,9 @@ const experiences = [
     company: 'iHub',
     type: 'Internship',
     current: false,
-    gradient: 'from-cyan-500 to-blue-500',
+    gradient: 'linear-gradient(135deg, #0891b2, #22d3ee)',
+    accentColor: '#0891b2',
+    dotColor: '#0891b2',
     achievements: [
       'Developed an immersive 3D Kart Racing game using Babylon.js with highly interactive controls.',
       'Heavily optimized the render pipeline, reducing overall frame lag by 40%.',
@@ -48,20 +55,31 @@ const experiences = [
 
 export default function Experience() {
   return (
-    <section id="experience" className="py-24 md:py-36 px-6 md:px-8 relative z-10">
+    <section id="experience" className="py-28 md:py-40 px-6 md:px-8 relative z-10 overflow-hidden">
+
+      {/* Ambient blobs */}
+      <div
+        className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none -z-10"
+        style={{
+          background: 'radial-gradient(circle, var(--orb-2) 0%, transparent 70%)',
+          filter: 'blur(100px)',
+          opacity: 0.4,
+        }}
+      />
+
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
+          transition={{ duration: 0.9, ease: [0.25, 1, 0.5, 1] }}
           className="mb-20"
         >
           <span className="section-label">Career</span>
           <h2 className="section-title text-5xl md:text-6xl lg:text-7xl mb-5 tracking-tighter">
-            Experience<span className="text-accent">.</span>
+            Experience<span style={{ color: 'var(--accent)' }}>.</span>
           </h2>
           <p className="section-subtitle font-light md:text-xl">
             A track record of shipping impactful software, optimizing architecture, and driving results.
@@ -69,49 +87,80 @@ export default function Experience() {
         </motion.div>
 
         {/* Timeline */}
-        <div className="relative pl-10 md:pl-16">
+        <div className="relative pl-10 md:pl-20">
 
           {/* Animated vertical line */}
           <motion.div
             initial={{ scaleY: 0 }}
             whileInView={{ scaleY: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 1.6, ease: 'easeInOut' }}
+            transition={{ duration: 1.8, ease: 'easeInOut' }}
             className="timeline-line hidden md:block origin-top"
-            style={{ left: 'clamp(17px, 4vw, 26px)' }}
+            style={{ left: 'clamp(18px, 4vw, 28px)' }}
           />
 
-          <div className="space-y-12">
+          <div className="space-y-10">
             {experiences.map((exp, index) => (
               <motion.div
                 key={exp.company}
-                initial={{ opacity: 0, x: -32 }}
+                initial={{ opacity: 0, x: -40 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: '-80px' }}
-                transition={{ duration: 0.7, delay: index * 0.15, ease: [0.25, 1, 0.5, 1] }}
-                className="relative group md:pl-10"
+                transition={{ duration: 0.75, delay: index * 0.16, ease: [0.25, 1, 0.5, 1] }}
+                className="relative group md:pl-12"
               >
                 {/* Timeline dot */}
-                <div className="absolute hidden md:flex items-center justify-center top-7 -left-[calc(2.5rem+1px)] md:-left-[calc(3.5rem+1px)] z-10">
+                <div className="absolute hidden md:flex items-center justify-center top-8 -left-[calc(3rem+1px)] md:-left-[calc(4rem+1px)] z-10">
                   <motion.div
-                    className="timeline-dot group-hover:scale-125 transition-transform duration-400"
-                    whileInView={{ scale: [0, 1.2, 1] }}
+                    className="relative"
+                    whileInView={{ scale: [0, 1.3, 1] }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.15 + 0.3 }}
-                  />
+                    transition={{ duration: 0.6, delay: index * 0.16 + 0.35 }}
+                  >
+                    {/* Outer ring */}
+                    <motion.div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: exp.accentColor,
+                        opacity: 0.15,
+                      }}
+                      animate={{ scale: [1, 1.8, 1], opacity: [0.15, 0, 0.15] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: index * 0.5 }}
+                    />
+                    <div
+                      className="relative w-3.5 h-3.5 rounded-full border-[3px] shadow-lg"
+                      style={{
+                        background: 'var(--background)',
+                        borderColor: exp.accentColor,
+                        boxShadow: `0 0 0 4px var(--background), 0 0 20px ${exp.accentColor}60`,
+                      }}
+                    />
+                  </motion.div>
                 </div>
 
                 {/* Card */}
-                <div className="card p-7 md:p-9 relative overflow-hidden hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-400">
-
-                  {/* Top gradient accent */}
-                  <div
-                    className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${exp.gradient} opacity-60 group-hover:opacity-100 transition-opacity duration-400`}
+                <div
+                  className="card p-7 md:p-9 relative overflow-hidden hover:-translate-y-2 transition-all duration-500 group"
+                  style={{ '--accent-color': exp.accentColor } as any}
+                >
+                  {/* Top gradient accent — animated width on hover */}
+                  <motion.div
+                    className="absolute top-0 left-0 h-[3px] rounded-t-[20px]"
+                    style={{ background: exp.gradient, right: 0 }}
+                    initial={{ opacity: 0.5, scaleX: 0.7, originX: 0 }}
+                    whileInView={{ opacity: 0.7, scaleX: 1 }}
+                    whileHover={{ opacity: 1, scaleX: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
                   />
 
-                  {/* Ambient blob */}
-                  <div className="absolute top-0 right-0 w-56 h-56 rounded-full blur-3xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{ background: `var(--accent-light)` }}
+                  {/* Ambient glow in top-right */}
+                  <div
+                    className="absolute -top-20 -right-20 w-64 h-64 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                    style={{
+                      background: `radial-gradient(circle, ${exp.accentColor}18 0%, transparent 70%)`,
+                      filter: 'blur(20px)',
+                    }}
                   />
 
                   {/* Header row */}
@@ -120,31 +169,41 @@ export default function Experience() {
                       {/* Role + current badge */}
                       <div className="flex flex-wrap items-center gap-3 mb-3">
                         <h3
-                          className="text-xl md:text-2xl font-display font-bold tracking-tight group-hover:text-accent transition-colors duration-300"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-xl md:text-2xl font-display font-bold tracking-tight transition-colors duration-300"
+                          style={{ color: 'var(--text-primary)', letterSpacing: '-0.03em' }}
                         >
                           {exp.role}
                         </h3>
                         {exp.current && (
-                          <span
+                          <motion.span
                             className="inline-flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
                             style={{
                               background: 'rgba(34,197,94,0.1)',
                               color: '#22c55e',
                               border: '1px solid rgba(34,197,94,0.25)',
                             }}
+                            animate={{ opacity: [1, 0.7, 1] }}
+                            transition={{ duration: 2.5, repeat: Infinity }}
                           >
                             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                             Current
-                          </span>
+                          </motion.span>
                         )}
                       </div>
 
                       {/* Company + type row */}
                       <div className="flex flex-wrap items-center gap-4">
                         <div className="flex items-center gap-2">
-                          <Building2 className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-                          <span className="text-sm font-bold text-gradient-static">
+                          <Building2 className="w-3.5 h-3.5" style={{ color: exp.accentColor }} />
+                          <span
+                            className="text-sm font-bold"
+                            style={{
+                              background: exp.gradient,
+                              WebkitBackgroundClip: 'text',
+                              backgroundClip: 'text',
+                              color: 'transparent',
+                            }}
+                          >
                             {exp.company}
                           </span>
                         </div>
@@ -177,30 +236,11 @@ export default function Experience() {
                   </div>
 
                   {/* Achievements */}
-                  <ul
-                    className="space-y-3 pt-5"
-                    style={{ borderTop: '1px solid var(--border)' }}
-                  >
-                    {exp.achievements.map((item, i) => (
-                      <motion.li
-                        key={i}
-                        initial={{ opacity: 0, x: -10 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.4, delay: index * 0.1 + i * 0.08 }}
-                        className="flex items-start gap-3 text-[0.9rem] leading-relaxed group/item"
-                        style={{ color: 'var(--text-secondary)' }}
-                      >
-                        <TrendingUp
-                          className="w-3.5 h-3.5 shrink-0 mt-1 transition-colors duration-300 group-hover/item:text-accent"
-                          style={{ color: 'var(--accent)', opacity: 0.7 }}
-                        />
-                        <span className="group-hover/item:text-text-primary transition-colors duration-300">
-                          {item}
-                        </span>
-                      </motion.li>
-                    ))}
-                  </ul>
+                  <ExpandableExperienceCard
+                    achievements={exp.achievements}
+                    accentColor={exp.accentColor}
+                    baseDelay={index * 0.1}
+                  />
                 </div>
               </motion.div>
             ))}
