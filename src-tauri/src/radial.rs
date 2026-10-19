@@ -97,11 +97,14 @@ pub fn create<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
         .shadow(false)
         .always_on_top(true)
         .skip_taskbar(true)
-        .focused(false)
-        .visible(false)
+        // Created visible and focusable, then hidden at once: on Windows a webview created
+        // hidden and unfocused never accepts file drops (tauri-apps/tauri#14643). The page
+        // is transparent at this point, so nothing shows.
+        .visible(true)
         // Keep the hidden page responsive so the open animation starts on the first frame.
         .background_throttling(BackgroundThrottlingPolicy::Disabled)
         .build()?;
+    window.hide()?;
 
     let handle = app.clone();
     let menu_window = window.clone();

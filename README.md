@@ -168,6 +168,8 @@ the input or replaces an existing file.
   has one through Microsoft's paid "HEVC Video Extensions", and the open-source x265
   encoder is GPL-licensed. See DECISIONS.md.
 - Showing the shelf from the tray gives it keyboard focus.
+- If you hide the shelf, it still appears for an instant when Dropwheel starts. This
+  works around a Windows WebView bug that blocks file drops on windows created hidden.
 - Some Windows behaviour has been built and reasoned about but not yet checked by hand on
   Windows 10 and 11: Alt+Tab exclusion, position restore across monitors, and the menu
   taking focus after a drop from Explorer. Please report anything that looks off.

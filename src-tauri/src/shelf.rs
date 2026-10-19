@@ -18,13 +18,20 @@ const MARGIN: f64 = 24.0;
 const PARKED: i32 = -32000;
 
 pub fn create<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
+    let saved = app.state::<SettingsStore>().get().shelf;
+    let screens = screens(app);
+    let placed = saved
+        .position
+        .and_then(|p| screen_under(p, &screens).map(|s| (keep_inside(p, s), s.scale_factor)))
+        .or_else(|| default_position(app));
+
     let builder = WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("shelf.html".into()));
     #[cfg(windows)]
     let builder = match crate::platform::hidden_owner() {
         Some(owner) => builder.owner_raw(owner),
         None => builder,
     };
-    let window = builder
+    let builder = builder
         .title(format!("{} shelf", app.package_info().name))
         .inner_size(SIZE, SIZE)
         .resizable(false)
@@ -35,17 +42,19 @@ pub fn create<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
         .shadow(false)
         .always_on_top(true)
         .skip_taskbar(true)
-        .focused(false)
-        // Shown once it is in place, so it never flashes at the default position.
-        .visible(false)
-        .build()?;
-
-    let saved = app.state::<SettingsStore>().get().shelf;
-    let position = saved
-        .position
-        .filter(|p| is_on_screen(&window, *p))
-        .or_else(|| default_position(&window));
-    if let Some(p) = position {
+        // Created visible and focusable, already in place. On Windows a webview created
+        // hidden and unfocused never accepts file drops, even once shown: the cursor shows
+        // "not allowed" (tauri-apps/tauri#14643).
+        .visible(true);
+    // The builder takes logical pixels, converted with the scale of the display they land
+    // on.
+    let builder = match placed {
+        Some((p, scale)) => builder.position(f64::from(p.x) / scale, f64::from(p.y) / scale),
+        None => builder,
+    };
+    let window = builder.build()?;
+    if let Some((p, _)) = placed {
+        // Exact placement, in case the conversion settled on a neighbouring display.
         window.set_position(PhysicalPosition::new(p.x, p.y))?;
     }
 
@@ -64,8 +73,8 @@ pub fn create<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
         _ => {}
     });
 
-    if saved.visible {
-        window.show()?;
+    if !saved.visible {
+        window.hide()?;
     }
     tray::set_shelf_visible(app, saved.visible);
     Ok(())
@@ -123,10 +132,15 @@ fn remember_position<R: Runtime>(app: &AppHandle<R>, p: PhysicalPosition<i32>) {
     }
 }
 
-/// A saved position can point at a monitor that has since been unplugged.
-fn is_on_screen<R: Runtime>(window: &WebviewWindow<R>, p: Position) -> bool {
-    let screens: Vec<Screen> = window
-        .available_monitors()
+struct Screen {
+    origin: Position,
+    width: u32,
+    height: u32,
+    scale_factor: f64,
+}
+
+fn screens<R: Runtime>(app: &AppHandle<R>) -> Vec<Screen> {
+    app.available_monitors()
         .unwrap_or_default()
         .iter()
         .map(|m| Screen {
@@ -138,19 +152,13 @@ fn is_on_screen<R: Runtime>(window: &WebviewWindow<R>, p: Position) -> bool {
             height: m.size().height,
             scale_factor: m.scale_factor(),
         })
-        .collect();
-    centre_is_on_a_screen(p, &screens)
+        .collect()
 }
 
-struct Screen {
-    origin: Position,
-    width: u32,
-    height: u32,
-    scale_factor: f64,
-}
-
-fn centre_is_on_a_screen(p: Position, screens: &[Screen]) -> bool {
-    screens.iter().any(|s| {
+/// The display under the shelf's centre at `p`. None when a saved position points at a
+/// monitor that has since been unplugged.
+fn screen_under(p: Position, screens: &[Screen]) -> Option<&Screen> {
+    screens.iter().find(|s| {
         let half = physical(SIZE / 2.0, s.scale_factor);
         let (x, y) = (p.x.saturating_add(half), p.y.saturating_add(half));
         let right = s.origin.x.saturating_add_unsigned(s.width);
@@ -159,16 +167,30 @@ fn centre_is_on_a_screen(p: Position, screens: &[Screen]) -> bool {
     })
 }
 
-/// Bottom-right corner of the primary display, clear of the taskbar.
-fn default_position<R: Runtime>(window: &WebviewWindow<R>) -> Option<Position> {
-    let monitor = window.primary_monitor().ok().flatten()?;
+/// Moves `p` as little as needed for the whole shelf to be on `screen`.
+fn keep_inside(p: Position, screen: &Screen) -> Position {
+    let size = physical(SIZE, screen.scale_factor);
+    let clamp = |v: i32, start: i32, extent: u32| {
+        let end = start.saturating_add_unsigned(extent).saturating_sub(size);
+        v.min(end).max(start)
+    };
+    Position {
+        x: clamp(p.x, screen.origin.x, screen.width),
+        y: clamp(p.y, screen.origin.y, screen.height),
+    }
+}
+
+/// Bottom-right corner of the primary display, clear of the taskbar, with that display's
+/// scale factor.
+fn default_position<R: Runtime>(app: &AppHandle<R>) -> Option<(Position, f64)> {
+    let monitor = app.primary_monitor().ok().flatten()?;
     let area = monitor.work_area();
-    // Not outer_size(): a window that has never been shown may report zero.
     let inset = physical(SIZE + MARGIN, monitor.scale_factor());
-    Some(Position {
+    let p = Position {
         x: area.position.x + area.size.width as i32 - inset,
         y: area.position.y + area.size.height as i32 - inset,
-    })
+    };
+    Some((p, monitor.scale_factor()))
 }
 
 fn physical(logical: f64, scale_factor: f64) -> i32 {
@@ -195,13 +217,26 @@ mod tests {
             screen(0, 0, 3840, 2160, 1.5),
             screen(-1920, 0, 1920, 1080, 1.0),
         ];
-        let at = |x, y| centre_is_on_a_screen(Position { x, y }, &screens);
-        assert!(at(3600, 1900));
-        assert!(at(-1900, 10));
+        let at = |x, y| screen_under(Position { x, y }, &screens).map(|s| s.scale_factor);
+        assert_eq!(at(3600, 1900), Some(1.5));
+        assert_eq!(at(-1900, 10), Some(1.0));
         // Mostly off the right edge, or on a monitor that is no longer there.
-        assert!(!at(3800, 100));
-        assert!(!at(-3000, 100));
-        assert!(!at(100, 2500));
-        assert!(!at(i32::MAX, i32::MAX));
+        assert_eq!(at(3800, 100), None);
+        assert_eq!(at(-3000, 100), None);
+        assert_eq!(at(100, 2500), None);
+        assert_eq!(at(i32::MAX, i32::MAX), None);
+    }
+
+    #[test]
+    fn restored_shelf_is_pulled_fully_on_screen() {
+        let laptop = screen(0, 0, 3840, 2160, 1.5);
+        let inside = |x, y| {
+            let p = keep_inside(Position { x, y }, &laptop);
+            (p.x, p.y)
+        };
+        // 120 logical pixels are 180 physical at 150%.
+        assert_eq!(inside(3700, 2100), (3660, 1980));
+        assert_eq!(inside(-50, -10), (0, 0));
+        assert_eq!(inside(500, 600), (500, 600));
     }
 }

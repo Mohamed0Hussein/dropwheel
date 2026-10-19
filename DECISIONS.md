@@ -41,8 +41,19 @@ Choices made while building Dropwheel, with the reason for each. Newest phase la
 
 ### Windows and tray
 
-- **The shelf is created in Rust, not in `tauri.conf.json`.** That way it can be placed at
-  its saved position while still hidden, so it never flashes at a default spot.
+- **The shelf is created in Rust, not in `tauri.conf.json`,** so it can be built directly
+  at its saved position.
+- **Windows are never created hidden.** On Windows, a WebView created hidden and unfocused
+  never accepts file drops, even after it is shown. The cursor shows "not allowed" over
+  it ([tauri#14643](https://github.com/tauri-apps/tauri/issues/14643), fixed upstream in
+  [wry#1638](https://github.com/tauri-apps/wry/pull/1638) but not yet in a wry release).
+  Phase 1 created the shelf hidden to avoid a flash before positioning, and drops failed
+  on a real Windows machine. So the shelf is now created visible and focusable, at its
+  final position: the physical position is converted to logical pixels with that
+  display's scale, then set exactly once the window exists. A shelf the user has hidden
+  is hidden right after creation, so it appears for an instant at startup. A restored
+  position is pulled fully onto its display first. Otherwise a creation point off every
+  display makes Windows choose a default spot instead.
 - **The shelf is owned by a hidden window** (`src-tauri/src/platform.rs`). tao gives every
   unowned window `WS_EX_APPWINDOW`, which keeps it in Alt+Tab even with `skip_taskbar`.
   Windows leaves owned windows out of both the taskbar and Alt+Tab. Setting
@@ -119,7 +130,9 @@ Choices made while building Dropwheel, with the reason for each. Newest phase la
 
 - **One window, created at startup and reused.** It is hidden between uses, so opening
   the menu costs a move and a show rather than starting a WebView. Background throttling
-  is off for it, so a hidden page reacts at once.
+  is off for it, so a hidden page reacts at once. It is created visible and hidden
+  straight away, for the drop bug described under phase 1. Its page is transparent at
+  that point.
 - **Centred on the cursor at the moment of the drop**, in screen coordinates. The drop
   event's own position is relative to the shelf and is only a fallback. The menu is then
   moved as little as needed to stay inside the work area of that monitor. With the shelf
