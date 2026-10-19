@@ -1,137 +1,300 @@
+<div align="center">
+
+<img src="ui/src/assets/icon.svg" width="88" height="88" alt="Dropwheel icon">
+
 # Dropwheel
 
-A Windows tray utility for files. Drop files on a small floating shelf, and a radial menu
-opens where you dropped them. Pick a wedge to convert, compress, crop, annotate or redact.
+**Drop a file. Pick an action. Done.**
 
-> **Dropwheel is a working name.** It stands in for the final product name. See
-> [Renaming](#renaming).
+A small Windows tray app that turns everyday file chores (converting, compressing,
+cropping, annotating, redacting) into one drag and one click.
 
-Targets Windows 10 and 11, x64.
+![Windows 10 and 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4)
+![Rust 1.92+](https://img.shields.io/badge/Rust-1.92%2B-B7410E?logo=rust&logoColor=white)
+![Tauri 2](https://img.shields.io/badge/Tauri-2-24C8D8?logo=tauri&logoColor=white)
+![Works offline](https://img.shields.io/badge/works-offline-2EA44F)
 
-## Status
+<br>
 
-**All six phases are done.** Every action in the menu works, for images, PDF, DOCX and
-TXT. Settings, notifications, starting with Windows and the installers are in place.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/wheel-dark.png">
+  <img src="docs/images/wheel-light.png" width="400" alt="The Dropwheel menu for a photo: a ring of formats to convert to, an outer ring of tools, and the photo in the middle">
+</picture>
 
-| Feature                                                                  | Status          |
-| ------------------------------------------------------------------------ | --------------- |
-| Tray icon with Show/Hide shelf, Settings and Quit                        | Done            |
-| Floating shelf: frameless, transparent, always on top, light/dark theme  | Done            |
-| Drag the shelf to move it; position remembered, reset if off-screen      | Done            |
-| Shelf and menu kept out of the taskbar and Alt+Tab                       | Done            |
-| Single instance (launching again shows the shelf)                        | Done            |
-| Settings in `%APPDATA%\Dropwheel\settings.json`, edited in a Settings window | Done      |
-| Drag and drop from Explorer onto the shelf                               | Done            |
-| Radial menu at the drop point: Convert ring and Tools ring, only the actions that fit | Done |
-| Hover or keyboard focus shows the action in the centre; Esc or a click outside closes | Done |
-| Open and close animation (scale and fade, compositor only)               | Done            |
-| Several files at once: the menu offers what fits all of them             | Done            |
-| Background jobs with progress and a result on the shelf                  | Done            |
-| Images: convert between JPG, PNG, WEBP, BMP, TIFF, AVIF (and HEIC, see below) | Done   |
-| Compress by quality or to a target size, with a live size estimate      | Done            |
-| Crop with handles, aspect chips (Free, 1:1, 4:3, 3:4, 16:9, 9:16) and pixel inputs | Done |
-| Edit: rotate, flip, grayscale, brightness, contrast, with a live preview | Done            |
-| Metadata: EXIF, location, PNG text, comments and XMP listed; remove all  | Done            |
-| Add a solid background behind transparency                               | Done            |
-| Annotate: boxes, arrows and text (Arabic too), with move, delete and undo | Done           |
-| Redact: solid black boxes; the copy carries no metadata; PDF pages too   | Done            |
-| Images to PDF; PDF pages to JPG, PNG, WEBP, BMP, TIFF                    | Done            |
-| PDF to DOCX and TXT, Arabic included; DOCX and TXT to each other and to PDF | Done         |
-| PDF compression (pictures recompressed), cropping (every page) and metadata | Done         |
-| DOCX metadata: properties, custom properties, thumbnail, reviewer names  | Done            |
-| Results next to the original or all in one chosen folder                 | Done            |
-| Windows notification when a job ends, with Open and Show in Explorer     | Done            |
-| Start with Windows (per user, no admin rights)                           | Done            |
-| NSIS and MSI installers, portable .exe                                   | Done            |
-| Third-party licences, opened from Settings                               | Done            |
+</div>
 
-### Which actions appear
+## Contents
 
-| Dropped file                     | Convert ring                              | Tools ring |
-| -------------------------------- | ----------------------------------------- | ---------- |
-| JPG, PNG, WEBP, BMP, TIFF, GIF, ICO, AVIF, HEIC | PDF and the other image formats | Crop, Edit, Annotate and Redact (all but ICO); Compress (JPG, PNG, WEBP, AVIF, TIFF); Metadata (JPG, PNG, WEBP, TIFF, AVIF, HEIC); Add background (PNG, WEBP, AVIF, TIFF, GIF) |
-| PDF                              | DOCX, TXT, JPG, PNG, WEBP, BMP, TIFF      | Compress, Crop, Redact, Metadata |
-| DOCX                             | PDF, TXT                                  | Metadata |
-| TXT                              | DOCX, PDF                                 | none |
-| Anything else, or a folder       | none                                      | none |
+- [Why Dropwheel](#why-dropwheel)
+- [Features](#features)
+- [How it works](#how-it-works)
+- [A closer look](#a-closer-look)
+- [What it can do with each file](#what-it-can-do-with-each-file)
+- [Install](#install)
+- [Using Dropwheel](#using-dropwheel)
+- [Privacy and safety](#privacy-and-safety)
+- [Building from source](#building-from-source)
+- [Architecture](#architecture)
+- [Known limitations](#known-limitations)
+- [Credits and licences](#credits-and-licences)
 
-A file's type comes from its content, so a PNG renamed to `.jpg` is treated as a PNG.
-When several files are dropped, the menu shows only the actions that apply to all of
-them.
+## Why Dropwheel
 
-### Image formats
+Small file jobs usually mean opening a heavy editor or uploading to a website you don't
+know: shrink this photo for an email, turn that PDF into Word, hide an account number
+before sharing a scan. Dropwheel keeps a small shelf on your desktop instead. Drop files
+on it and a wheel of actions opens right where you let go. It only offers what makes
+sense for those files, and it works entirely on your PC.
+
+## Features
+
+- **One gesture.** Drop a file and pick a wedge. Only the actions that fit the file are
+  shown.
+- **Convert anything common.** Images between JPG, PNG, WEBP, BMP, TIFF, AVIF and HEIC.
+  Images to PDF and PDF pages to images. PDF to Word or text, and Word or text to PDF.
+- **Compress** photos and PDFs by quality, or down to a target size, with a live estimate
+  of the result.
+- **Crop and edit** with aspect presets, rotate, flip, black and white, brightness and
+  contrast.
+- **Annotate** with boxes, arrows and text, in any language, Arabic and other
+  right-to-left scripts included.
+- **Redact for real.** Black boxes are painted into the pixels, and PDF pages are
+  flattened, so what was underneath cannot be recovered.
+- **Remove hidden data** such as location, camera details and the names stored in Word
+  documents.
+- **Many files at once.** Drop several files and the action you pick applies to all of
+  them.
+- **Safe by design.** Originals are never modified and nothing is ever overwritten.
+- **Feels native.** Tray icon, notifications with Open and Show in Explorer, start with
+  Windows, and light and dark themes that follow your system.
+
+## How it works
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/shelf-dark.png">
+    <img src="docs/images/shelf-light.png" width="660" alt="The shelf: waiting for files, a file over it, a job in progress, and the job done">
+  </picture>
+</p>
+
+1. **Drop.** Drag files from Explorer onto the shelf, a small always-on-top square you
+   can place anywhere.
+2. **Pick.** The wheel opens at the drop point. The inner ring converts; the outer ring
+   holds the tools. Hover a wedge to see what it does, then click it.
+3. **Done.** The result is saved next to the original, or in a folder of your choice. The
+   shelf shows the progress, and Windows tells you when it is ready.
+
+## A closer look
+
+Actions that need choices open a dialog with a live preview.
+
+<table>
+  <tr>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/images/dialog-annotate-dark.png">
+        <img src="docs/images/dialog-annotate-light.png" alt="Annotate dialog with a box, an arrow and a caption on a photo">
+      </picture>
+      <p align="center"><b>Annotate</b>: boxes, arrows and text, with undo.</p>
+    </td>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/images/dialog-redact-dark.png">
+        <img src="docs/images/dialog-redact-light.png" alt="Redact dialog hiding a name, an address and a bank account on an invoice">
+      </picture>
+      <p align="center"><b>Redact</b>: page by page, for PDFs too.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/images/dialog-compress-dark.png">
+        <img src="docs/images/dialog-compress-light.png" alt="Compress dialog with a quality slider and the estimated size">
+      </picture>
+      <p align="center"><b>Compress</b>: see the size before you save.</p>
+    </td>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/images/dialog-metadata-dark.png">
+        <img src="docs/images/dialog-metadata-light.png" alt="Metadata dialog listing camera, date and location details">
+      </picture>
+      <p align="center"><b>Metadata</b>: see what a file gives away.</p>
+    </td>
+  </tr>
+</table>
+
+## What it can do with each file
+
+| Dropped file | Convert to | Tools |
+| --- | --- | --- |
+| **Images**: JPG, PNG, WEBP, BMP, TIFF, GIF, ICO, AVIF, HEIC | PDF and the other image formats | Crop, Edit, Annotate, Redact (all but ICO) · Compress (JPG, PNG, WEBP, AVIF, TIFF) · Metadata (JPG, PNG, WEBP, TIFF, AVIF, HEIC) · Add background (PNG, WEBP, AVIF, TIFF, GIF) |
+| **PDF** | DOCX, TXT, JPG, PNG, WEBP, BMP, TIFF | Compress, Crop, Redact, Metadata |
+| **Word (DOCX)** | PDF, TXT | Metadata |
+| **Text (TXT)** | DOCX, PDF | |
+
+Dropwheel reads a file's type from its content, not its name, so a PNG renamed to `.jpg`
+is still treated as a PNG. Results are named after the original and the action:
+`photo_compressed.jpg`, `report_converted.docx`, `scan_redacted.pdf`, and so on. If that
+name is taken, Dropwheel adds a number, as in `photo_compressed (2).jpg`.
+
+<details>
+<summary><b>Image formats in detail</b></summary>
+
+<br>
 
 | Format | Read | Write | Notes |
-| ------ | ---- | ----- | ----- |
-| JPG    | Yes  | Yes   | Progressive, optimised. EXIF orientation is applied, so photos come out upright. |
-| PNG    | Yes  | Yes   | Compress below 90% reduces colours to a palette. |
-| WEBP   | Yes  | Yes   | Lossy from photos, lossless from graphics. Animated files: first frame. |
-| BMP    | Yes  | Yes   | |
-| TIFF   | Yes  | Yes   | Written losslessly with Deflate. Multi-page files: first page. |
-| GIF    | Yes  | Yes   | Animated files: first frame. |
-| ICO    | Yes  | No    | Edits of an icon are saved as PNG. |
-| AVIF   | Windows, with the free "AV1 Video Extension" | Yes | Encoding is slow on large images. |
-| HEIC   | Windows, with the free "HEIF Image Extensions" | With Microsoft's paid "HEVC Video Extensions" | Without the encoder, the HEIC wedge is hidden and HEIC edits are saved as JPG. |
+| --- | --- | --- | --- |
+| JPG | Yes | Yes | Progressive and optimised. Photos are turned upright from their EXIF orientation. |
+| PNG | Yes | Yes | Compressing below 90% reduces the colours to a palette. |
+| WEBP | Yes | Yes | Lossy for photos, lossless for graphics. Animated files: first frame. |
+| BMP | Yes | Yes | |
+| TIFF | Yes | Yes | Written losslessly. Multi-page files: first page. |
+| GIF | Yes | Yes | Animated files: first frame. |
+| ICO | Yes | No | Edits of an icon are saved as PNG. |
+| AVIF | With Windows' free "AV1 Video Extension" | Yes | Encoding large images is slow. |
+| HEIC | With Windows' free "HEIF Image Extensions" | With Microsoft's paid "HEVC Video Extensions" | Without the encoder, HEIC is not offered as a target and HEIC edits are saved as JPG. |
 
-### Documents
+</details>
 
-| From | To | How |
-| ---- | -- | --- |
-| Image | PDF | One A4 page, turned to suit the picture, the picture centred within half-inch margins and never enlarged past its size at 96 dpi. JPEGs go in as they are. |
-| PDF | JPG, PNG, WEBP, BMP, TIFF | Pages rendered at 200 dpi. One page gives one file; more give a folder, `name_pages`, with `name_page1.png` and so on. |
-| PDF | TXT | Each line as on the page, a blank line between paragraphs and pages. |
-| PDF | DOCX | Lines joined back into paragraphs, larger text as headings, bold and italic kept, pictures cut from the page. Pages with no text, such as scans, become a picture of the page. |
-| DOCX | PDF | Laid out afresh: headings, bold, italic, underline, colours, sizes, bullets and numbering, tables, pictures, page breaks and right-to-left paragraphs. |
+<details>
+<summary><b>Document conversions in detail</b></summary>
+
+<br>
+
+| From | To | Result |
+| --- | --- | --- |
+| Image | PDF | One A4 page, turned to suit the picture, with the picture centred and never enlarged. JPEGs go in unchanged. |
+| PDF | Images | Each page at 200 dpi. Several pages give a folder, `name_pages`, with one file per page. |
+| PDF | TXT | The text line by line, with blank lines between paragraphs and pages. |
+| PDF | DOCX | Paragraphs, headings, bold, italic and pictures rebuilt. Scanned pages become pictures. |
+| DOCX | PDF | Headings, styles, colours, lists, tables, pictures, page breaks and right-to-left text. |
 | DOCX | TXT | Paragraphs as lines, list markers kept, table cells separated by tabs. |
-| TXT | DOCX, PDF | One paragraph per line. UTF-8, UTF-16 and older encodings (such as Windows-1252 and Windows-1256 for Arabic) are recognised. |
+| TXT | DOCX, PDF | One paragraph per line. UTF-8, UTF-16 and older Windows encodings are recognised. |
 
-PDFs are written with searchable text in Noto Sans and IBM Plex Sans Arabic, with
-Windows fonts for other scripts. On PDFs, Compress recompresses the pictures (and below
-90% scales large ones down); Crop applies the same rectangle to every page; Redact turns
-every page into a picture with the boxes painted in; Metadata removes the document
-information, XMP and private application data. Password-protected PDFs are refused with
-a message saying so.
+PDFs Dropwheel writes have real, searchable text, set in Noto Sans and IBM Plex Sans
+Arabic with Windows fonts for other scripts. On PDFs, Compress shrinks the pictures,
+Crop applies the same frame to every page, and Metadata removes the document
+information, XMP and private application data.
 
-Results are written next to the original, or in the folder chosen in Settings, as
-`name_converted.png`, `name_compressed.jpg`, `name_cropped.jpg`, `name_edited.jpg`,
-`name_annotated.jpg`, `name_redacted.jpg`, `name_clean.jpg` (metadata removed) or
-`name_background.png`. Nothing is ever overwritten: a second run gives
-`name_compressed (2).jpg`.
+</details>
 
-### Settings and notifications
+## Install
 
-Settings opens from the tray menu. Changes apply at once; there is no Save button.
+**Requirements:** Windows 10 or 11, 64-bit, with the Microsoft Edge WebView2 Runtime.
+Windows 11 includes it, and most Windows 10 PCs have it; both installers fetch it if it
+is missing.
 
-- **Results**: next to the original, or all in one folder. The folder must exist and
-  Dropwheel must be able to write in it, or the change is refused with a message.
-- **Start with Windows**: adds Dropwheel to the current user's startup programs. No
-  admin rights are needed. If the exe moves (a portable copy), the entry follows it the
-  next time Dropwheel starts.
-- **Notify when done**: when a job ends, Windows shows a notification with the result
-  and two buttons. **Open** opens the file in its usual app (or the folder, when there
-  are several results); **Show in Explorer** opens its folder with the file selected.
-  Clicking the notification itself is the same as Open. The buttons still work from the
-  notification centre later on; if Dropwheel has been quit, they start it.
-- **Show the shelf**: the same as Show/Hide shelf in the tray menu.
+- **Installer** (`Dropwheel_<version>_x64-setup.exe`), recommended. Installs for your user
+  only, without admin rights, with a Start menu entry and a clean uninstaller.
+- **MSI** (`Dropwheel_<version>_x64_en-US.msi`), for installing for every user of a PC.
+- **Portable** (`dropwheel.exe`), for running from any folder or a USB stick without
+  installing.
 
-While a job runs, the shelf shows its progress and the dialog offers Cancel. A cancelled
-job does not notify.
+There is no published release yet. Every CI run builds all three and attaches them to
+the run as the `dropwheel-windows-x64` artifact (see the Actions tab), or you can build
+them yourself as described below.
 
-## Building
+> [!NOTE]
+> The builds are not code-signed yet, so Windows SmartScreen may warn before the first
+> run. Choose **More info**, then **Run anyway**.
 
-### Prerequisites (Windows)
+## Using Dropwheel
 
-- [Rust](https://rustup.rs) stable, 1.92 or newer, with the MSVC toolchain. Install the
-  Visual Studio Build Tools with the "Desktop development with C++" workload.
-- [Node.js](https://nodejs.org) 20.19+ or 22.12+ (check with `node --version`; Vite needs
-  it). `winget install OpenJS.NodeJS.LTS` installs the current LTS.
-- WebView2 Runtime. Windows 11 ships with it, and most Windows 10 machines have it
-  through Edge.
+**The shelf.** Drag it anywhere; it remembers where you left it. Click the tray icon to
+show or hide it, or right-click it for Settings and Quit.
+
+**The wheel.** Hover a wedge to read its name in the centre, then click it. Press Esc or
+click outside the wheel to close it. Actions such as Compress or Redact open a dialog;
+simple ones, such as converting, start straight away.
+
+**Settings.** Open them from the tray menu. Changes apply at once.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/settings-dark.png">
+    <img src="docs/images/settings-light.png" width="320" alt="The Settings window">
+  </picture>
+</p>
+
+- **Results**: save next to the original, or collect everything in one folder.
+- **Start with Windows**: the shelf is ready when you sign in. No admin rights needed.
+- **Notify when done**: a Windows notification with **Open** and **Show in Explorer**.
+  The buttons keep working from the notification centre, even after Dropwheel has quit.
+- **Show the shelf**: the same as the tray menu's Show/Hide.
+
+<details>
+<summary><b>Keyboard shortcuts</b></summary>
+
+<br>
+
+| Where | Keys | Action |
+| --- | --- | --- |
+| Wheel | Arrow keys | Move between wedges |
+| Wheel | Enter or Space | Run the selected action |
+| Wheel | Esc | Close |
+| Annotate, Redact | Ctrl+Z | Undo |
+| Annotate, Redact | Delete | Remove the selected shape |
+| Annotate | Enter / Shift+Enter | Finish the text / start a new line |
+| Redact (PDF) | Page Up / Page Down | Previous / next page |
+| Crop | Arrow keys (with Shift: ×10) | Nudge the crop frame |
+| Dialogs, Settings | Esc | Close |
+
+</details>
+
+## Privacy and safety
+
+- **Nothing leaves your PC.** There are no uploads, accounts or telemetry, and the app
+  contains no networking code. PDF support and the fonts are built in.
+- **Originals stay untouched.** Every action writes a new file, and existing files are
+  never replaced.
+- **Redaction is permanent.** Boxes are burned into the pixels, and redacted copies carry
+  none of the original's metadata. PDF pages are flattened to images, so hidden text
+  cannot be copied out.
+- **Links are locked down.** The notification buttons use a `dropwheel:` link that can
+  only show a file in Explorer or open a file Dropwheel itself created, so a web page
+  cannot use it to open anything else.
+
+<details>
+<summary><b>Everything Dropwheel stores on your PC</b></summary>
+
+<br>
+
+| Location | Contents |
+| --- | --- |
+| `%APPDATA%\Dropwheel\settings.json` | Settings, including the shelf position |
+| `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\logs\` | Log files |
+| `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\EBWebView\` | WebView2 data |
+| `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\pdfium\` | The PDF engine, unpacked from the exe on first start |
+| `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\results.json` | The last 200 results, which a notification may open |
+| `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\notification-icon.png` | The icon shown on notifications |
+
+In the registry, under `HKEY_CURRENT_USER` only:
+
+| Key | Purpose |
+| --- | --- |
+| `Software\Microsoft\Windows\CurrentVersion\Run`, value `Dropwheel` | Start with Windows, when it is on |
+| `Software\Classes\AppUserModelId\io.github.mohamed0hussein.dropwheel` | The name and icon on notifications |
+| `Software\Classes\dropwheel` | The links behind the notification buttons |
+
+The installer's uninstaller removes these registry entries and, if you tick its box, the
+`%LOCALAPPDATA%` folder. Your settings in `%APPDATA%\Dropwheel` stay until you delete
+them. A settings file that cannot be read is set aside as `settings.json.bad`, and
+Dropwheel starts with defaults.
+
+</details>
+
+## Building from source
+
+### Prerequisites
+
+- [Rust](https://rustup.rs) 1.92 or newer with the MSVC toolchain, plus the Visual Studio
+  Build Tools with the "Desktop development with C++" workload.
+- [Node.js](https://nodejs.org) 20.19+ or 22.12+ (`winget install OpenJS.NodeJS.LTS`).
+- The WebView2 Runtime.
 
 ### Run in development
 
-Quit any installed copy first (tray icon → Quit). Only one Dropwheel runs at a time, so
-a second one just shows the first one's shelf. Then, from the `ui` folder:
+Quit any installed copy first: only one Dropwheel runs at a time.
 
 ```powershell
 cd ui
@@ -139,20 +302,10 @@ npm install
 npm run tauri dev
 ```
 
-If you have the Cargo subcommand (`cargo install tauri-cli --version "^2" --locked`),
-`cargo tauri dev` from the repository root does the same as the last line. Either way, the Vite
-dev server starts on port 1420 and the app reloads when Rust files change. The first run
-compiles for several minutes.
-
-Both `npm run tauri dev` and `npm run tauri build` first run `scripts/fetch-pdfium.mjs`,
-which downloads PDFium (about 4 MB, pinned and checked against a SHA-256) into
-`vendor/pdfium` once. The build embeds it in the exe. Without it, everything builds and
-runs, but PDF actions report that PDF support is missing. To fetch it by hand:
-`node scripts/fetch-pdfium.mjs`.
-
-To work on the menu without dragging files each time, list them in
-`DROPWHEEL_DEV_DROP`, separated by `;`. Development builds then open the menu for them in
-the middle of the screen at startup. Release builds ignore the variable.
+The first run downloads PDFium (about 4 MB, pinned and checksum-verified) into
+`vendor/pdfium` and compiles for a few minutes. Afterwards the app reloads as you edit.
+To skip dragging files while working on the wheel, list them in `DROPWHEEL_DEV_DROP` and
+development builds open the menu for them at startup:
 
 ```powershell
 $env:DROPWHEEL_DEV_DROP = "C:\Users\me\Pictures\photo.jpg;C:\Users\me\report.pdf"
@@ -161,39 +314,22 @@ npm run tauri dev
 
 ### Release build
 
-From the `ui` folder:
-
 ```powershell
+cd ui
 npm run tauri build
 ```
 
-| Output                                                  | What it is                             |
-| ------------------------------------------------------- | -------------------------------------- |
-| `target\release\dropwheel.exe`                          | Portable executable                    |
-| `target\release\bundle\nsis\Dropwheel_0.1.0_x64-setup.exe` | Installer, per user, no admin rights (recommended) |
-| `target\release\bundle\msi\Dropwheel_0.1.0_x64_en-US.msi`  | Installer, per machine               |
+This produces the portable `target\release\dropwheel.exe`, the NSIS installer in
+`target\release\bundle\nsis\` and the MSI in `target\release\bundle\msi\`. The exe is
+self-contained: PDFium, the fonts and the interface are all inside it.
 
-Paths are relative to the repository root. The first release build downloads the NSIS and WiX
-toolsets.
-
-The portable exe is the whole app: PDFium, the fonts and the pages are inside it. Copy
-it anywhere and run it. Both installers add a Start menu entry and an uninstaller; the
-NSIS one also removes Dropwheel's registry entries on uninstall
-(`src-tauri/windows/hooks.nsh`) and can delete its settings and data if you tick the box.
-If WebView2 is missing, the installers download it.
-
-### Building the Windows app on Linux
-
-Without a Windows machine, `scripts/build-windows-on-linux.sh` cross-compiles with
-MinGW and makes the NSIS installer and a portable zip (see the script for the packages
-it needs). Such a build loads `WebView2Loader.dll` from beside the exe, which the MSVC
-build links in, so its portable form is the exe and that DLL together. The MSI needs
-Windows.
+To build on Linux without a Windows machine, `scripts/build-windows-on-linux.sh`
+cross-compiles with MinGW and produces the NSIS installer and a portable zip. A MinGW
+build needs `WebView2Loader.dll` beside the exe; the zip and the installer include it.
 
 ### Checks
 
 ```powershell
-node scripts/fetch-pdfium.mjs   # once; the PDF tests skip themselves without it
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
@@ -203,37 +339,27 @@ npm run typecheck
 npm test
 ```
 
-The notices check needs Python 3. After adding or updating a dependency, run
-`python scripts/make-notices.py` to rewrite `THIRD-PARTY-NOTICES.txt`.
+CI runs all of these on Windows for every push, then builds the installers and the
+portable exe ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)). After changing
+dependencies, run `python scripts/make-notices.py` to refresh the licence notices.
 
-CI runs all of these on `windows-latest`, then builds both installers and the portable
-exe and uploads them as the `dropwheel-windows-x64` artifact. See
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml).
-
-## Layout
+## Architecture
 
 ```
 dropwheel/
-├─ crates/core/        Pure Rust file operations: no UI, no Tauri. Unit tested.
-├─ src-tauri/          The Tauri 2 app: tray, windows, settings, IPC commands,
-│  │                   notifications and other Windows integration.
-│  ├─ capabilities/    What each window may call.
-│  ├─ icons/           Generated by scripts/make-icons.py.
-│  └─ windows/         NSIS installer hooks.
-├─ ui/                 Vanilla TypeScript and Vite. One HTML page per window:
-│  │                   shelf, radial (the menu) and settings.
-│  ├─ src/lib/         Shared code: IPC types, wedge geometry, icons.
-│  └─ src/assets/      Icon sources (SVG).
-├─ scripts/            Icon generator; fetch-pdfium.mjs downloads PDFium;
-│                      make-notices.py writes THIRD-PARTY-NOTICES.txt.
-├─ vendor/pdfium/      PDFium, once downloaded (not in Git).
-├─ licenses/           Licences of PDFium and the libraries built into it.
-├─ THIRD-PARTY-NOTICES.txt  Every licence of what is built into the app.
-├─ DECISIONS.md        Why things are the way they are.
-└─ README.md
+├─ crates/core/     All file processing, in plain Rust: no UI, fully unit tested
+├─ crates/wic/      Windows Imaging Component bindings for HEIC and AVIF
+├─ src-tauri/       The desktop app: tray, windows, jobs, settings, notifications
+├─ ui/              The interface: TypeScript and Vite, one page per window
+├─ scripts/         PDFium download, icon generator, notices, Linux cross-build
+├─ docs/images/     Screenshots for this README
+├─ DECISIONS.md     Why things are built the way they are
+└─ THIRD-PARTY-NOTICES.txt
 ```
 
-Each action in `crates/core` implements one trait:
+Every action in the menu is one implementation of a single trait in `dropwheel-core`.
+The app finds the actions that fit the dropped files, runs the chosen one on a
+background thread and reports progress to the shelf:
 
 ```rust
 pub trait Action: Send + Sync {
@@ -245,107 +371,99 @@ pub trait Action: Send + Sync {
 }
 ```
 
-`out` is the output folder. `run` writes through `output::write_new`, which never touches
-the input or replaces an existing file.
+| Area | Built with |
+| --- | --- |
+| App shell | [Tauri 2](https://tauri.app) on WebView2 |
+| Interface | TypeScript and Vite, without a framework; the wheel is SVG |
+| Images | `image`, `jpeg-encoder`, libwebp, `ravif`, and Windows codecs for HEIC and AVIF |
+| PDF | PDFium (reading and rendering), `krilla` (writing), `lopdf` (editing) |
+| Word | `zip` and `quick-xml`, with a small document model shared with PDF and TXT |
+| Text and drawing | `rustybuzz`, `unicode-bidi` and `tiny-skia`, with bundled fonts |
+| Windows integration | The `windows` crate: notifications, registry, Explorer |
 
-## Files Dropwheel writes
-
-| Path                                                    | Contents                       |
-| ------------------------------------------------------- | ------------------------------ |
-| `%APPDATA%\Dropwheel\settings.json`                     | Settings, including shelf position |
-| `%APPDATA%\Dropwheel\settings.json.bad`                 | A settings file that could not be read, set aside |
-| `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\logs\` | Log files                    |
-| `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\EBWebView\` | WebView2 data          |
-| `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\pdfium\` | PDFium, written out of the exe on first start |
-| `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\results.json` | The last 200 results, which a notification's Open may open |
-| `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\notification-icon.png` | The icon Windows shows on notifications |
-| `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\THIRD-PARTY-NOTICES.txt` | Written when you open the licences from Settings |
-
-And in the registry, all under `HKEY_CURRENT_USER`:
-
-| Key                                                     | What it is for                 |
-| ------------------------------------------------------- | ------------------------------ |
-| `Software\Microsoft\Windows\CurrentVersion\Run`, value `Dropwheel` | Start with Windows, when it is on |
-| `Software\Classes\AppUserModelId\io.github.mohamed0hussein.dropwheel` | The name and icon on notifications |
-| `Software\Classes\dropwheel`                            | The `dropwheel:` links behind the notification buttons |
-
-The `dropwheel:` links can only select a file in Explorer, or open a file Dropwheel
-itself wrote (one in `results.json`). Any other request is ignored, so a web page cannot
-use them to open files on your computer.
+[DECISIONS.md](DECISIONS.md) records the reasoning behind each choice.
 
 ## Known limitations
 
-- Windows only. The code also compiles on Linux so development checks can run there, but
-  that is not a supported platform.
-- The portable exe needs the WebView2 Runtime and keeps its settings in `%APPDATA%`, the
-  same as the installed app.
-- Text is set in the bundled Noto Sans and IBM Plex Sans Arabic. Other scripts use fonts
-  that come with Windows (Segoe UI, Microsoft YaHei, Malgun Gothic, Nirmala UI and
-  others); emoji are drawn as plain glyphs where those fonts have them. Italics are
-  slanted Noto Sans, as no italic face is bundled.
-- PDF to DOCX rebuilds paragraphs from where the lines are; it does not recover tables,
-  columns or the exact layout. Text in two columns comes out column by column. Scanned
-  pages become pictures: there is no text recognition (OCR).
-- DOCX to PDF leaves out headers, footers, footnotes, comments, text effects and charts,
-  and uses the bundled fonts rather than the document's. Pictures in Windows metafile
-  formats (EMF, WMF) are skipped.
-- Cropping a PDF hides the rest of each page without deleting it, as PDF viewers'
-  own crop does. Redact is the way to remove content.
-- A redacted PDF's pages are pictures, so its text can no longer be selected or
-  searched, and the file is larger.
-- PDF compression only touches pictures stored as JPEG, or uncompressed and Flate
-  pictures in RGB or grey. Fonts and other content are packed but not rewritten.
-- Password-protected PDFs are refused rather than opened.
-- HEIC and AVIF are read through Windows' own codecs, which come from Microsoft Store
-  extensions. Without them, opening those files fails with a message naming the
-  extension to install. Writing HEIC needs the paid "HEVC Video Extensions".
-- Conversions, compression and edits keep the picture and its colour profile (JPG and
-  PNG) but not its EXIF data, since orientation is applied to the pixels. Remove metadata
-  is the action for stripping deliberately.
-- Images with 16 bits per channel are written with 8.
-- Animated GIF and WebP, and multi-page TIFF, are reduced to their first frame or page.
-- Showing the shelf from the tray gives it keyboard focus.
-- If you hide the shelf, it still appears for an instant when Dropwheel starts. This
-  works around a Windows WebView bug that blocks file drops on windows created hidden.
-- Notifications follow Windows' own settings: with Do Not Disturb (Focus Assist) on, or
-  notifications turned off for Dropwheel in Windows Settings, they go straight to the
-  notification centre or nowhere.
-- A notification's Open only opens one of the last 200 results; after that it does
-  nothing, and Show in Explorer still works.
-- Uninstalling the MSI leaves the registry entries above (the NSIS uninstaller removes
-  them). They are harmless: the startup entry of a missing exe does nothing. Turn off
-  Start with Windows before uninstalling to remove it.
-- Some Windows behaviour has been built and reasoned about but not yet checked by hand on
-  Windows 10 and 11: Alt+Tab exclusion, position restore across monitors, HEIC and AVIF
-  through Windows' codecs, notifications and their buttons, starting with Windows, and
-  the installers' uninstall steps. Please report anything that looks off.
+- **Windows only.** The code also builds on Linux, for development checks.
+- **PDF to Word** rebuilds paragraphs, headings and pictures, but not tables, columns or
+  the exact layout. There is no text recognition (OCR) for scans.
+- **Word to PDF** leaves out headers, footers, footnotes, comments and charts, and uses
+  the bundled fonts instead of the document's.
+- **Redacted PDFs** are images of their pages, so they are larger and their text can no
+  longer be selected.
+- **Password-protected PDFs** are refused rather than opened.
+- **HEIC and AVIF** need Microsoft's free Store extensions to open, and saving as HEIC
+  needs the paid HEVC extension.
 
-## Credits
+<details>
+<summary><b>All known limitations</b></summary>
 
-This software is based in part on the work of the Independent JPEG Group (through the
-`jpeg-encoder` crate and PDFium's libjpeg-turbo). WebP is written with Google's libwebp
-(BSD licence). PDFs are read with PDFium (BSD licence), in the build by Benoit Blanchon's
-pdfium-binaries; its licence and those of the libraries in it, including FreeType
-("Portions of this software are copyright © The FreeType Project, www.freetype.org.
-All rights reserved."), are in `licenses/pdfium/`. The Noto Sans fonts are © The Noto
-Project Authors and IBM Plex Sans Arabic is © IBM Corp., both under the SIL Open Font
-License 1.1 (`crates/core/fonts/OFL-*.txt`). Everything else is under permissive
-licences (MIT, Apache-2.0, BSD and similar). `THIRD-PARTY-NOTICES.txt` has every licence
-text and copyright notice; the app opens it from Settings → Third-party licences. A few
-crates that Tauri uses to parse CSS (`cssparser`, `selectors`, `dtoa-short`) and
-`option-ext` are under the Mozilla Public License 2.0; their source is on crates.io,
-unchanged.
+<br>
 
-## Renaming
+- Conversions and edits keep the colour profile but not EXIF data, since the orientation
+  is applied to the pixels. Use Metadata to strip data deliberately.
+- Images with 16 bits per channel are saved with 8. Animated GIF and WEBP, and
+  multi-page TIFF, are reduced to their first frame or page.
+- Cropping a PDF hides the rest of each page without deleting it, as PDF viewers' own
+  crop does. Use Redact to remove content.
+- PDF compression only recompresses pictures. Fonts and other content are repacked but
+  not rewritten.
+- Italic text in generated PDFs is slanted Noto Sans, since no italic face is bundled.
+  Emoji are drawn as plain glyphs where Windows fonts have them.
+- Pictures in Windows metafile formats (EMF, WMF) are skipped when converting Word to
+  PDF.
+- Notifications follow Windows' Do Not Disturb and notification settings. Open works for
+  the last 200 results; Show in Explorer always works.
+- If the shelf is hidden, it still flashes briefly at startup. This works around a
+  WebView2 bug that blocks file drops on windows created hidden.
+- Uninstalling the MSI leaves the per-user registry entries listed above; the NSIS
+  uninstaller removes them.
+- Some Windows behaviour has not yet been verified by hand on every Windows version:
+  Alt+Tab exclusion, the shelf position across monitors, HEIC and AVIF through Windows'
+  codecs, notifications, starting with Windows and the uninstall steps. Please open an
+  issue if anything looks wrong.
 
-The product name appears in these places:
+</details>
 
-- `src-tauri/tauri.conf.json`: `productName` (drives window titles, the tray tooltip and the
+## Credits and licences
+
+Dropwheel stands on excellent open-source work:
+
+- [PDFium](https://pdfium.googlesource.com/pdfium/) (BSD), in the build by Benoit
+  Blanchon's [pdfium-binaries](https://github.com/bblanchon/pdfium-binaries), including
+  FreeType. Portions of this software are copyright © The FreeType Project
+  (www.freetype.org). All rights reserved.
+- This software is based in part on the work of the Independent JPEG Group.
+- [libwebp](https://chromium.googlesource.com/webm/libwebp) by Google (BSD).
+- [Noto Sans](https://fonts.google.com/noto) © The Noto Project Authors and
+  [IBM Plex Sans Arabic](https://github.com/IBM/plex) © IBM Corp., both under the SIL
+  Open Font License 1.1.
+- [Tauri](https://tauri.app) and hundreds of Rust crates under MIT, Apache-2.0, BSD and
+  similar licences. A few that Tauri uses (`cssparser`, `selectors`, `dtoa-short`,
+  `option-ext`) are under the Mozilla Public License 2.0, unchanged from crates.io.
+
+[THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt) holds every licence text and copyright
+notice; the app shows it under Settings → Third-party licences.
+
+Dropwheel's own code has no licence yet, so all rights are reserved by the author until
+one is chosen.
+
+<details>
+<summary><b>Renaming the app</b></summary>
+
+<br>
+
+"Dropwheel" is a working name. To rename the product, change:
+
+- `src-tauri/tauri.conf.json`: `productName` (window titles, tray tooltip and the
   `%APPDATA%` folder) and `identifier`.
-- `ui/*.html`: page titles.
+- `ui/*.html`: the page titles.
 - `src-tauri/src/integration.rs` (`SCHEME`) and `src-tauri/windows/hooks.nsh`: the
   `dropwheel:` link scheme.
-- Crate and package names (`dropwheel`, `dropwheel-core`, `dropwheel-ui`) and the folder
-  name. Changing these is optional.
+- Optionally, the crate and package names (`dropwheel`, `dropwheel-core`,
+  `dropwheel-ui`).
 
 `git grep -i dropwheel` lists every occurrence.
+
+</details>
