@@ -6,11 +6,11 @@ Choices made while building Dropwheel, with the reason for each. Newest phase la
 
 ### Project
 
-- **Lives in `dropwheel/` inside the portfolio repository.** The work was started in that
-  repo. The folder is self-contained (its own Cargo workspace, npm package, `.gitignore`
-  and CI workflow), so `git subtree split --prefix dropwheel` can move it to its own repo
-  later. The portfolio's `tsconfig.json` and `eslint.config.mjs` exclude it so the Next.js
-  build ignores it.
+- **Its own repository.** The work was started in `dropwheel/` inside the owner's
+  portfolio repository, self-contained (its own Cargo workspace, npm package and
+  `.gitignore`). It was then moved here with `git subtree split --prefix dropwheel`,
+  which keeps its history. The CI workflow moved from the portfolio's
+  `.github/workflows/dropwheel.yml` to `.github/workflows/ci.yml`.
 - **"Dropwheel" is a working name** for the placeholder product name. README → Renaming
   lists every place to change.
 - **Identifier `io.github.mohamed0hussein.dropwheel`**, after the GitHub account that owns
@@ -28,7 +28,7 @@ Choices made while building Dropwheel, with the reason for each. Newest phase la
   (phase 5) needs 1.92.
 - **The `ui/` folder has its own `package.json`.** Its `tauri` script runs the CLI from the
   workspace root (`cd .. && tauri`). The Tauri config starts Vite with `cwd: "../ui"`, so
-  `cargo tauri dev` from `dropwheel/` and `npm run tauri dev` from `ui/` both work.
+  `cargo tauri dev` from the root and `npm run tauri dev` from `ui/` both work.
   The README avoids `npm --prefix ui install`: some older npm versions read
   `package.json` from the current folder and ignore the prefix. It failed that way on a
   real Windows machine, while npm 10 handles it.

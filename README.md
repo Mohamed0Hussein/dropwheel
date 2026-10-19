@@ -140,7 +140,7 @@ npm run tauri dev
 ```
 
 If you have the Cargo subcommand (`cargo install tauri-cli --version "^2" --locked`),
-`cargo tauri dev` from `dropwheel/` does the same as the last line. Either way, the Vite
+`cargo tauri dev` from the repository root does the same as the last line. Either way, the Vite
 dev server starts on port 1420 and the app reloads when Rust files change. The first run
 compiles for several minutes.
 
@@ -173,7 +173,7 @@ npm run tauri build
 | `target\release\bundle\nsis\Dropwheel_0.1.0_x64-setup.exe` | Installer, per user, no admin rights (recommended) |
 | `target\release\bundle\msi\Dropwheel_0.1.0_x64_en-US.msi`  | Installer, per machine               |
 
-Paths are relative to `dropwheel/`. The first release build downloads the NSIS and WiX
+Paths are relative to the repository root. The first release build downloads the NSIS and WiX
 toolsets.
 
 The portable exe is the whole app: PDFium, the fonts and the pages are inside it. Copy
@@ -208,7 +208,7 @@ The notices check needs Python 3. After adding or updating a dependency, run
 
 CI runs all of these on `windows-latest`, then builds both installers and the portable
 exe and uploads them as the `dropwheel-windows-x64` artifact. See
-[`.github/workflows/dropwheel.yml`](../.github/workflows/dropwheel.yml).
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ## Layout
 
