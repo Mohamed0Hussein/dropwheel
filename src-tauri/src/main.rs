@@ -2,7 +2,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
+mod jobs;
 mod platform;
+mod radial;
 mod settings;
 mod settings_window;
 mod shelf;
@@ -40,13 +42,21 @@ fn run() -> anyhow::Result<()> {
                 )
                 .build(),
         )
-        .invoke_handler(tauri::generate_handler![commands::settings_info])
+        .invoke_handler(tauri::generate_handler![
+            commands::settings_info,
+            commands::radial_menu,
+            commands::radial_hide,
+            commands::run_action,
+        ])
         .setup(|app| {
             let path = settings::default_path(app.handle())?;
             log::info!("settings: {}", path.display());
             app.manage(SettingsStore::load(path));
             tray::create(app.handle())?;
+            radial::create(app.handle())?;
             shelf::create(app.handle())?;
+            #[cfg(debug_assertions)]
+            dev_drop(app.handle());
             Ok(())
         })
         .build(tauri::generate_context!())
@@ -67,4 +77,27 @@ fn run() -> anyhow::Result<()> {
         _ => {}
     });
     Ok(())
+}
+
+/// Development aid: `DROPWHEEL_DEV_DROP="C:\a.png;C:\b.pdf"` opens the menu for those
+/// files at startup, as if they had been dropped in the middle of the primary screen.
+#[cfg(debug_assertions)]
+fn dev_drop(app: &tauri::AppHandle) {
+    let Some(list) = std::env::var_os("DROPWHEEL_DEV_DROP") else {
+        return;
+    };
+    let paths: Vec<_> = std::env::split_paths(&list).collect();
+    let centre = app
+        .primary_monitor()
+        .ok()
+        .flatten()
+        .map(|m| {
+            let (p, s) = (m.position(), m.size());
+            tauri::PhysicalPosition::new(
+                f64::from(p.x) + f64::from(s.width) / 2.0,
+                f64::from(p.y) + f64::from(s.height) / 2.0,
+            )
+        })
+        .unwrap_or_default();
+    radial::open(app, paths, centre);
 }

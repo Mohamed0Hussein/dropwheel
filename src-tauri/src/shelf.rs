@@ -1,10 +1,11 @@
 //! The small floating square that files are dropped on.
 
 use tauri::{
-    AppHandle, Manager, PhysicalPosition, Runtime, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
-    WindowEvent,
+    AppHandle, DragDropEvent, Manager, PhysicalPosition, Runtime, WebviewUrl, WebviewWindow,
+    WebviewWindowBuilder, WindowEvent,
 };
 
+use crate::radial;
 use crate::settings::{Position, SettingsStore};
 use crate::tray;
 
@@ -49,7 +50,11 @@ pub fn create<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     }
 
     let handle = app.clone();
+    let shelf = window.clone();
     window.on_window_event(move |event| match event {
+        WindowEvent::DragDrop(DragDropEvent::Drop { paths, position }) if !paths.is_empty() => {
+            radial::open(&handle, paths.clone(), drop_point(&shelf, *position));
+        }
         WindowEvent::Moved(p) => remember_position(&handle, *p),
         // Alt+F4 on the shelf hides it; only Quit in the tray menu ends the app.
         WindowEvent::CloseRequested { api, .. } => {
@@ -92,6 +97,21 @@ pub fn toggle<R: Runtime>(app: &AppHandle<R>) {
         .and_then(|w| w.is_visible().ok())
         .unwrap_or(false);
     set_visible(app, !visible);
+}
+
+/// Where the files were dropped, in screen coordinates. The cursor is still there; the
+/// event's own position is relative to the window and only used as a fallback.
+fn drop_point<R: Runtime>(
+    window: &WebviewWindow<R>,
+    in_window: PhysicalPosition<f64>,
+) -> PhysicalPosition<f64> {
+    window.cursor_position().unwrap_or_else(|_| {
+        let origin = window.inner_position().unwrap_or_default();
+        PhysicalPosition::new(
+            f64::from(origin.x) + in_window.x,
+            f64::from(origin.y) + in_window.y,
+        )
+    })
 }
 
 fn remember_position<R: Runtime>(app: &AppHandle<R>, p: PhysicalPosition<i32>) {

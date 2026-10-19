@@ -18,6 +18,7 @@ export default defineConfig({
     rolldownOptions: {
       input: {
         shelf: page("shelf"),
+        radial: page("radial"),
         settings: page("settings"),
       },
     },

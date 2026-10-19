@@ -16,7 +16,7 @@ log.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tempfile.workspace = true
-tauri = { version = "2.12.4", features = ["tray-icon", "image-png"] }
+tauri = { version = "2.12.4", features = ["tray-icon", "image-png", "protocol-asset"] }
 tauri-plugin-log = "2.10.1"
 tauri-plugin-single-instance = "2.5.4"
 

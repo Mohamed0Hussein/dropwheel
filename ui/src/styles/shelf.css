@@ -49,6 +49,17 @@ body {
   border-color: var(--shelf-border-hover);
 }
 
+/* Files are being dragged over the shelf. */
+.shelf.is-over {
+  border-color: var(--ember-300);
+  border-width: 2px;
+  transform: scale(0.97);
+}
+
+.shelf.is-over .shelf__ring--hot {
+  stroke-dasharray: 80 0;
+}
+
 .shelf:active {
   cursor: grabbing;
 }
@@ -81,6 +92,33 @@ body {
   stroke-dashoffset: -5.8;
 }
 
+/* A job is running: the ring fills as it progresses. */
+.shelf__progress {
+  fill: none;
+  stroke: var(--ember-300);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: calc(var(--progress, 0) * 1) 100;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  opacity: 0;
+  transition:
+    stroke-dasharray 160ms linear,
+    opacity 160ms;
+}
+
+.shelf.is-busy .shelf__progress {
+  opacity: 1;
+}
+
+.shelf.is-busy .shelf__ring--hot {
+  opacity: 0;
+}
+
+.shelf.is-error .shelf__label {
+  color: var(--ember-500);
+}
+
 .shelf__arrow {
   fill: none;
   stroke: currentColor;
@@ -89,8 +127,17 @@ body {
   stroke-linejoin: round;
 }
 
+/* Status messages may take two lines; anything longer is in the tooltip. */
 .shelf__label {
+  display: -webkit-box;
+  max-width: 104px;
+  overflow: hidden;
   font-size: 12px;
   font-weight: 600;
+  line-height: 1.25;
   letter-spacing: 0.01em;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }

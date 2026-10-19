@@ -2,6 +2,13 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "What Dropwheel's own windows may do.",
-  "windows": ["shelf", "settings"],
-  "permissions": ["core:default", "core:window:allow-start-dragging"]
+  "windows": [
+    "shelf",
+    "radial",
+    "settings"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging"
+  ]
 }

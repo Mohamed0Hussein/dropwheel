@@ -49,6 +49,14 @@ pub enum Error {
 
     #[error("Cancelled.")]
     Cancelled,
+
+    /// A bug, such as a panic caught at the edge of an action. The log has the details.
+    #[error("Something went wrong while processing this file. The log has details.")]
+    Internal,
+
+    /// The action is in the menu but its implementation has not landed yet.
+    #[error("{action} is not available yet.")]
+    NotAvailable { action: String },
 }
 
 impl Error {
@@ -82,6 +90,8 @@ impl Error {
             Error::Encode { .. } => "encode",
             Error::InvalidOptions(_) => "invalid_options",
             Error::Cancelled => "cancelled",
+            Error::Internal => "internal",
+            Error::NotAvailable { .. } => "not_available",
         }
     }
 }

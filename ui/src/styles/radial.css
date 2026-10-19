@@ -1,0 +1,259 @@
+@import "./base.css";
+
+:root {
+  --wedge-convert: rgb(29 25 57 / 0.94);
+  --wedge-tools: rgb(43 36 86 / 0.94);
+  --wedge-edge: rgb(207 200 255 / 0.16);
+  --wedge-text: var(--lilac-50);
+  --hub-bg: var(--lilac-50);
+  --hub-text: var(--indigo-950);
+  --hub-muted: rgb(21 18 43 / 0.6);
+  --hot-text: var(--indigo-950);
+  --shadow: drop-shadow(0 6px 14px rgb(10 8 24 / 0.45));
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --wedge-convert: rgb(250 249 255 / 0.96);
+    --wedge-tools: rgb(236 233 255 / 0.96);
+    --wedge-edge: rgb(43 36 86 / 0.14);
+    --wedge-text: var(--indigo-800);
+    --hub-bg: var(--indigo-900);
+    --hub-text: var(--lilac-50);
+    --hub-muted: rgb(245 243 255 / 0.62);
+    --shadow: drop-shadow(0 6px 14px rgb(10 8 24 / 0.22));
+  }
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.radial {
+  position: fixed;
+  inset: 0;
+  outline: none;
+}
+
+/* Each ring and the hub is its own layer, so the open and close animations only touch
+   transform and opacity and stay on the compositor. */
+.layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}
+
+.ring {
+  overflow: visible;
+  filter: var(--shadow);
+  /* The rings overlap; only painted wedges may take the pointer. */
+  pointer-events: none;
+}
+
+/* Open/close: scale and fade, the outer ring a beat behind the inner one. */
+.radial[data-state="closed"] .layer {
+  opacity: 0;
+  transform: scale(0.7);
+  transition: none;
+}
+
+.radial[data-state="open"] .layer {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    transform 200ms cubic-bezier(0.2, 1.1, 0.3, 1),
+    opacity 140ms ease-out;
+}
+
+.radial[data-state="open"] .ring--outer {
+  transition-delay: 40ms;
+}
+
+.radial[data-state="closing"] .layer {
+  opacity: 0;
+  transform: scale(0.85);
+  transition:
+    transform 120ms ease-in,
+    opacity 120ms ease-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radial .layer {
+    transform: none !important;
+  }
+}
+
+.wedge {
+  cursor: pointer;
+  outline: none;
+  pointer-events: visiblePainted;
+}
+
+.wedge__shape {
+  stroke: var(--wedge-edge);
+  stroke-width: 1;
+  transition: fill 90ms ease-out;
+}
+
+.wedge--convert .wedge__shape {
+  fill: var(--wedge-convert);
+}
+
+.wedge--tools .wedge__shape {
+  fill: var(--wedge-tools);
+}
+
+.wedge:hover .wedge__shape,
+.wedge:focus-visible .wedge__shape,
+.wedge.is-chosen .wedge__shape {
+  fill: var(--hot);
+  stroke: transparent;
+}
+
+.wedge__label {
+  fill: var(--wedge-text);
+  font: 650 12px/1 var(--font);
+  letter-spacing: 0.04em;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.wedge__icon {
+  pointer-events: none;
+}
+
+.wedge__icon path {
+  fill: none;
+  stroke: var(--wedge-text);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.wedge__icon path.is-solid {
+  fill: var(--wedge-text);
+  stroke: none;
+}
+
+.wedge:hover .wedge__label,
+.wedge:focus-visible .wedge__label,
+.wedge.is-chosen .wedge__label {
+  fill: var(--hot-text);
+}
+
+.wedge:hover .wedge__icon path,
+.wedge:focus-visible .wedge__icon path,
+.wedge.is-chosen .wedge__icon path {
+  stroke: var(--hot-text);
+}
+
+.wedge:hover .wedge__icon path.is-solid,
+.wedge:focus-visible .wedge__icon path.is-solid,
+.wedge.is-chosen .wedge__icon path.is-solid {
+  fill: var(--hot-text);
+}
+
+/* The hub: what was dropped, or what the hovered wedge will do. */
+.hub-layer {
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.hub {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 3px;
+  width: 108px;
+  height: 108px;
+  padding: 10px;
+  border-radius: 50%;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  filter: var(--shadow);
+  text-align: center;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.hub__thumb {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 2px;
+}
+
+.hub__thumb img {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.doc {
+  display: grid;
+  place-items: end center;
+  width: 32px;
+  height: 40px;
+  margin: 0 auto;
+  padding-bottom: 6px;
+  border-radius: 4px 12px 4px 4px;
+  background: var(--ember);
+  color: var(--indigo-950);
+  font: 700 9px/1 var(--font);
+  letter-spacing: 0.02em;
+}
+
+.hub__count {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border: 2px solid var(--hub-bg);
+  border-radius: 9px;
+  background: var(--ember-500);
+  color: var(--indigo-950);
+  font: 700 10px/14px var(--font);
+}
+
+.hub__title {
+  max-width: 92px;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hub.is-action .hub__title {
+  max-width: 96px;
+  white-space: normal;
+}
+
+.hub__subtitle {
+  max-width: 92px;
+  overflow: hidden;
+  color: var(--hub-muted);
+  font-size: 10.5px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.radial.is-empty .hub__subtitle {
+  white-space: normal;
+}

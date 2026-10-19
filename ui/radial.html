@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dropwheel menu</title>
+    <link rel="stylesheet" href="/src/styles/radial.css" />
+  </head>
+  <body>
+    <div class="radial" id="radial" data-state="closed" tabindex="-1">
+      <svg class="layer ring ring--outer" id="ring-outer" viewBox="-190 -190 380 380" role="group" aria-label="Tools"></svg>
+      <svg class="layer ring ring--inner" id="ring-inner" viewBox="-190 -190 380 380" role="group" aria-label="Convert"></svg>
+      <div class="layer hub-layer">
+        <div class="hub" id="hub" aria-live="polite">
+          <div class="hub__thumb" id="hub-thumb"></div>
+          <div class="hub__title" id="hub-title" dir="auto"></div>
+          <div class="hub__subtitle" id="hub-subtitle"></div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/radial.ts"></script>
+  </body>
+</html>
