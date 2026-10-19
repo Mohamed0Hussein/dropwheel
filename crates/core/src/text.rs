@@ -1,7 +1,7 @@
 //! Fonts, shaping and line layout, shared by annotations drawn into images and by the
 //! PDFs Dropwheel writes.
 //!
-//! Text is set in the bundled Noto Sans and Noto Sans Arabic, falling back to fonts that
+//! Text is set in the bundled Noto Sans and IBM Plex Sans Arabic, falling back to fonts that
 //! ship with Windows for other scripts. Each paragraph takes its direction from its first
 //! strong character, as with `unicode-bidi: plaintext` in CSS, so a dialog can preview
 //! text the way it will be drawn.
@@ -151,8 +151,8 @@ const FIRST_SYSTEM: u8 = 4;
 static SOURCES: [Source; 15] = [
     Source::Bundled(include_bytes!("../fonts/NotoSans-Regular.ttf")),
     Source::Bundled(include_bytes!("../fonts/NotoSans-Bold.ttf")),
-    Source::Bundled(include_bytes!("../fonts/NotoSansArabic-Regular.ttf")),
-    Source::Bundled(include_bytes!("../fonts/NotoSansArabic-Bold.ttf")),
+    Source::Bundled(include_bytes!("../fonts/IBMPlexSansArabic-Regular.ttf")),
+    Source::Bundled(include_bytes!("../fonts/IBMPlexSansArabic-Bold.ttf")),
     // Hebrew, Armenian, Georgian and more.
     Source::System("segoeui.ttf", 0),
     // Chinese, with Japanese kana.
@@ -267,11 +267,18 @@ fn chain_start(weight: Weight) -> FontId {
     }
 }
 
-/// One shaped glyph. Lengths are in ems: multiply by the font size.
+/// One shaped glyph. Lengths are in the units of the sizes given to [`layout_styled`];
+/// [`layout`] gives them in ems.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Glyph {
     pub font: FontId,
     pub id: u16,
+    /// Font size the glyph was shaped at.
+    pub size: f32,
+    /// Index of the [`Style`] it was set in.
+    pub style: usize,
+    /// Part of a right-to-left run.
+    pub rtl: bool,
     /// The characters this glyph shows, as byte offsets into the paragraph.
     pub text: Range<usize>,
     pub advance: f32,
@@ -304,13 +311,39 @@ struct Run {
     glyphs: Vec<Glyph>,
 }
 
+/// How a stretch of text is set.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Style {
+    pub weight: Weight,
+    pub size: f32,
+}
+
 /// Lays out `text`, one paragraph with no line breaks in it, wrapping lines at
 /// `max_width` ems when given. Tabs and other control characters should be replaced
 /// beforehand.
 pub fn layout(text: &str, weight: Weight, max_width: Option<f32>) -> Paragraph {
-    let bidi = ParagraphBidiInfo::new(text, None);
+    let styles = [(0..text.len(), Style { weight, size: 1.0 })];
+    layout_styled(text, &styles, max_width, None)
+}
+
+/// Lays out `text` set in `styles`, which cover it in order, wrapping at `max_width`.
+/// The paragraph's direction is `rtl` when given, otherwise that of its first letter.
+pub fn layout_styled(
+    text: &str,
+    styles: &[(Range<usize>, Style)],
+    max_width: Option<f32>,
+    rtl: Option<bool>,
+) -> Paragraph {
+    let level = rtl.map(|r| {
+        if r {
+            unicode_bidi::Level::rtl()
+        } else {
+            unicode_bidi::Level::ltr()
+        }
+    });
+    let bidi = ParagraphBidiInfo::new(text, level);
     let rtl = bidi.paragraph_level.is_rtl();
-    let runs = shape_runs(text, &bidi, weight);
+    let runs = shape_runs(text, &bidi, styles);
 
     // Advance of each cluster, indexed by the byte where it starts.
     let mut advance = vec![0.0f32; text.len() + 1];
@@ -351,29 +384,53 @@ pub fn layout(text: &str, weight: Weight, max_width: Option<f32>) -> Paragraph {
     Paragraph { lines, rtl }
 }
 
-fn shape_runs(text: &str, bidi: &ParagraphBidiInfo, weight: Weight) -> Vec<Run> {
-    let mut items: Vec<(Range<usize>, bool, FontId)> = Vec::new();
+fn shape_runs(text: &str, bidi: &ParagraphBidiInfo, styles: &[(Range<usize>, Style)]) -> Vec<Run> {
+    let fallback = Style {
+        weight: Weight::Regular,
+        size: 1.0,
+    };
+    let mut items: Vec<(Range<usize>, bool, FontId, usize)> = Vec::new();
     let mut previous = None;
+    let mut style_index = 0;
     for (i, c) in text.char_indices() {
+        while styles
+            .get(style_index)
+            .is_some_and(|(range, _)| range.end <= i && style_index + 1 < styles.len())
+        {
+            style_index += 1;
+        }
+        let weight = styles
+            .get(style_index)
+            .map_or(Weight::Regular, |s| s.1.weight);
         let rtl = bidi.levels.get(i).is_some_and(|l| l.is_rtl());
         let font = pick(c, weight, previous);
         previous = Some(font);
         let end = i + c.len_utf8();
         match items.last_mut() {
-            Some((range, r, f)) if *r == rtl && *f == font => range.end = end,
-            _ => items.push((i..end, rtl, font)),
+            Some((range, r, f, st)) if *r == rtl && *f == font && *st == style_index => {
+                range.end = end;
+            }
+            _ => items.push((i..end, rtl, font, style_index)),
         }
     }
     items
         .into_iter()
-        .map(|(range, rtl, font_id)| {
-            let glyphs = shape(text, range.clone(), rtl, font_id);
+        .map(|(range, rtl, font_id, style)| {
+            let size = styles.get(style).map_or(fallback.size, |s| s.1.size);
+            let glyphs = shape(text, range.clone(), rtl, font_id, size, style);
             Run { range, rtl, glyphs }
         })
         .collect()
 }
 
-fn shape(text: &str, range: Range<usize>, rtl: bool, font_id: FontId) -> Vec<Glyph> {
+fn shape(
+    text: &str,
+    range: Range<usize>,
+    rtl: bool,
+    font_id: FontId,
+    size: f32,
+    style: usize,
+) -> Vec<Glyph> {
     let f = font(font_id);
     let mut buffer = UnicodeBuffer::new();
     buffer.set_pre_context(&text[..range.start]);
@@ -407,10 +464,13 @@ fn shape(text: &str, range: Range<usize>, rtl: bool, font_id: FontId) -> Vec<Gly
             Glyph {
                 font: font_id,
                 id: u16::try_from(info.glyph_id).unwrap_or(0),
+                size,
+                style,
+                rtl,
                 text: range.start + start..range.start + end,
-                advance: pos.x_advance as f32 / em,
-                x_offset: pos.x_offset as f32 / em,
-                y_offset: pos.y_offset as f32 / em,
+                advance: pos.x_advance as f32 / em * size,
+                x_offset: pos.x_offset as f32 / em * size,
+                y_offset: pos.y_offset as f32 / em * size,
             }
         })
         .collect()

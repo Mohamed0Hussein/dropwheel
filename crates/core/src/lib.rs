@@ -9,12 +9,17 @@
 
 pub mod action;
 pub mod actions;
+pub mod doc;
+pub mod docx;
 pub mod error;
 pub mod imaging;
 pub mod kind;
 pub mod output;
 pub mod paths;
+pub mod pdf;
 pub mod text;
+pub mod txt;
+pub mod xml;
 
 pub use action::{
     Action, ActionGroup, Annotate, Background, CancelFlag, Compress, Crop, Edit, Options, Params,

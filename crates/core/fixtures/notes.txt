@@ -1,0 +1,6 @@
+Shopping list
+	milk
+	bread
+
+ملاحظة: لا تنسَ الخبز
+Last line without newline

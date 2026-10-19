@@ -1,5 +1,5 @@
-import arabicBold from "../../../crates/core/fonts/NotoSansArabic-Bold.ttf?url";
-import arabicRegular from "../../../crates/core/fonts/NotoSansArabic-Regular.ttf?url";
+import arabicBold from "../../../crates/core/fonts/IBMPlexSansArabic-Bold.ttf?url";
+import arabicRegular from "../../../crates/core/fonts/IBMPlexSansArabic-Regular.ttf?url";
 import latinBold from "../../../crates/core/fonts/NotoSans-Bold.ttf?url";
 import latinRegular from "../../../crates/core/fonts/NotoSans-Regular.ttf?url";
 import { h, svg } from "../lib/dom";

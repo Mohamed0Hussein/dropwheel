@@ -87,7 +87,7 @@ fn image_format(kind: FileKind) -> Option<ImageFormat> {
     })
 }
 
-fn limits() -> Limits {
+pub(crate) fn limits() -> Limits {
     let mut limits = Limits::default();
     limits.max_image_width = Some(MAX_SIDE);
     limits.max_image_height = Some(MAX_SIDE);

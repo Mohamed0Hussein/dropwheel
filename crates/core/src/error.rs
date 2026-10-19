@@ -44,6 +44,13 @@ pub enum Error {
     #[error("Could not write {}: {reason}", .kind.label())]
     Encode { kind: FileKind, reason: String },
 
+    #[error("\"{}\" is protected with a password. Save a copy without the password in a PDF reader, then try again.", paths::display(.path))]
+    Protected { path: PathBuf },
+
+    /// A library this build depends on at run time could not be loaded.
+    #[error("{what} is not available in this build: {reason}")]
+    MissingLibrary { what: &'static str, reason: String },
+
     #[error("Invalid options: {0}")]
     InvalidOptions(String),
 
@@ -88,6 +95,8 @@ impl Error {
             Error::Unsupported { .. } => "unsupported",
             Error::Decode { .. } => "decode",
             Error::Encode { .. } => "encode",
+            Error::Protected { .. } => "protected",
+            Error::MissingLibrary { .. } => "missing_library",
             Error::InvalidOptions(_) => "invalid_options",
             Error::Cancelled => "cancelled",
             Error::Internal => "internal",
