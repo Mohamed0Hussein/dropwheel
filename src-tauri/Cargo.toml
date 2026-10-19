@@ -1,0 +1,28 @@
+[package]
+name = "dropwheel"
+description = "Drop a file on the shelf, pick an action from the wheel."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[build-dependencies]
+tauri-build = { version = "2.7.3", features = [] }
+
+[dependencies]
+dropwheel-core.workspace = true
+anyhow.workspace = true
+log.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+tauri = { version = "2.12.4", features = ["tray-icon", "image-png"] }
+tauri-plugin-log = "2.10.1"
+tauri-plugin-single-instance = "2.5.4"
+
+# Same major as Tauri's own, so it is not built twice.
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62.2", features = ["Win32_UI_WindowsAndMessaging"] }
+
+[lints]
+workspace = true

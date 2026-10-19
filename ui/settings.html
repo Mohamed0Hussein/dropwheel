@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dropwheel Settings</title>
+    <link rel="stylesheet" href="/src/styles/settings.css" />
+  </head>
+  <body>
+    <main class="settings">
+      <header class="settings__header">
+        <img class="settings__logo" src="/src/assets/icon.svg" alt="" width="40" height="40" />
+        <h1>Settings</h1>
+      </header>
+
+      <section class="group" aria-labelledby="output-title">
+        <h2 id="output-title">Output</h2>
+        <div class="row">
+          <span class="row__label">Save results</span>
+          <span class="row__value" id="output-dir">…</span>
+        </div>
+      </section>
+
+      <section class="group" aria-labelledby="startup-title">
+        <h2 id="startup-title">Startup</h2>
+        <div class="row">
+          <span class="row__label">Start with Windows</span>
+          <span class="row__value" id="start-with-windows">…</span>
+        </div>
+      </section>
+
+      <p class="note">
+        These settings become editable in a later build. They are stored in
+        <code id="settings-path">…</code>
+      </p>
+    </main>
+    <script type="module" src="/src/settings.ts"></script>
+  </body>
+</html>

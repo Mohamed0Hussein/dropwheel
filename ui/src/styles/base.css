@@ -1,0 +1,32 @@
+/* Dropwheel design tokens. The palette follows the app icon: deep indigo surfaces,
+   lilac wedges and an ember accent for whatever is picked or active. */
+:root {
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+
+  --indigo-950: #15122b;
+  --indigo-900: #1d1939;
+  --indigo-800: #2b2456;
+  --lilac-200: #cfc8ff;
+  --lilac-50: #f5f3ff;
+  --ember-300: #ffb86b;
+  --ember-500: #ff6b6b;
+  --ember: linear-gradient(135deg, var(--ember-300), var(--ember-500));
+
+  --radius-lg: 24px;
+  --radius-md: 12px;
+  --ease-out: cubic-bezier(0.2, 0.9, 0.3, 1);
+
+  color-scheme: light dark;
+  font-family: var(--font);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}

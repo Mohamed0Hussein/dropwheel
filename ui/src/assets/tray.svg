@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2B2456"/>
+      <stop offset="1" stop-color="#15122B"/>
+    </linearGradient>
+    <linearGradient id="hot" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFB86B"/>
+      <stop offset="1" stop-color="#FF6B6B"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="200" fill="url(#bg)"/>
+  <path d="M333.0 110.0 A440 440 0 0 1 691.0 110.0 L613.7 283.6 A250 250 0 0 0 410.3 283.6 Z" fill="#CFC8FF" fill-opacity="0.34"/>
+  <path d="M770.6 156.0 A440 440 0 0 1 949.6 466.0 L760.6 485.9 A250 250 0 0 0 658.9 309.7 Z" fill="url(#hot)"/>
+  <path d="M949.6 558.0 A440 440 0 0 1 770.6 868.0 L658.9 714.3 A250 250 0 0 0 760.6 538.1 Z" fill="#CFC8FF" fill-opacity="0.34"/>
+  <path d="M691.0 914.0 A440 440 0 0 1 333.0 914.0 L410.3 740.4 A250 250 0 0 0 613.7 740.4 Z" fill="#CFC8FF" fill-opacity="0.34"/>
+  <path d="M253.4 868.0 A440 440 0 0 1 74.4 558.0 L263.4 538.1 A250 250 0 0 0 365.1 714.3 Z" fill="#CFC8FF" fill-opacity="0.34"/>
+  <path d="M74.4 466.0 A440 440 0 0 1 253.4 156.0 L365.1 309.7 A250 250 0 0 0 263.4 485.9 Z" fill="#CFC8FF" fill-opacity="0.34"/>
+  <circle cx="512.0" cy="512.0" r="200" fill="#F5F3FF"/>
+  <polygon points="481.8,407.8 542.2,407.8 542.2,515.4 599.4,515.4 512.0,616.2 424.6,515.4 481.8,515.4" fill="#2B2456"/>
+</svg>

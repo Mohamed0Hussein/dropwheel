@@ -1,0 +1,96 @@
+@import "./base.css";
+
+:root {
+  --shelf-bg: rgb(29 25 57 / 0.82);
+  --shelf-border: rgb(207 200 255 / 0.18);
+  --shelf-border-hover: rgb(207 200 255 / 0.4);
+  --shelf-text: var(--lilac-50);
+  --shelf-ring: rgb(207 200 255 / 0.4);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --shelf-bg: rgb(250 249 255 / 0.86);
+    --shelf-border: rgb(43 36 86 / 0.14);
+    --shelf-border-hover: rgb(43 36 86 / 0.32);
+    --shelf-text: var(--indigo-800);
+    --shelf-ring: rgb(43 36 86 / 0.28);
+  }
+}
+
+/* The window itself is transparent; only the rounded square is painted. */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.shelf {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  border: 1px solid var(--shelf-border);
+  border-radius: var(--radius-lg);
+  background: var(--shelf-bg);
+  color: var(--shelf-text);
+  cursor: grab;
+  transition:
+    border-color 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+.shelf:hover {
+  border-color: var(--shelf-border-hover);
+}
+
+.shelf:active {
+  cursor: grabbing;
+}
+
+/* Children must not swallow the mousedown that starts a window drag. */
+.shelf > * {
+  pointer-events: none;
+}
+
+.shelf__glyph {
+  width: 40px;
+  height: 40px;
+  overflow: visible;
+}
+
+.shelf__ring {
+  fill: none;
+  stroke: var(--shelf-ring);
+  stroke-width: 5;
+  /* pathLength is 80: eight wedges of 10 with a small gap. */
+  stroke-dasharray: 8.4 1.6;
+  stroke-dashoffset: 4.2;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.shelf__ring--hot {
+  stroke: var(--ember-300);
+  stroke-dasharray: 8.4 71.6;
+  stroke-dashoffset: -5.8;
+}
+
+.shelf__arrow {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.shelf__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
