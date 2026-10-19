@@ -54,22 +54,26 @@ them.
 
 - [Rust](https://rustup.rs) stable, 1.90 or newer, with the MSVC toolchain. Install the
   Visual Studio Build Tools with the "Desktop development with C++" workload.
-- [Node.js](https://nodejs.org) 20.19+ or 22.12+.
+- [Node.js](https://nodejs.org) 20.19+ or 22.12+ (check with `node --version`; Vite needs
+  it). `winget install OpenJS.NodeJS.LTS` installs the current LTS.
 - WebView2 Runtime. Windows 11 ships with it, and most Windows 10 machines have it
   through Edge.
 
 ### Run in development
 
-From this folder (`dropwheel/`):
+Quit any installed copy first (tray icon → Quit). Only one Dropwheel runs at a time, so
+a second one just shows the first one's shelf. Then, from the `ui` folder:
 
 ```powershell
-npm --prefix ui install
-npm --prefix ui run tauri dev
+cd ui
+npm install
+npm run tauri dev
 ```
 
-If you have the Cargo subcommand (`cargo install tauri-cli --version "^2" --locked`), use
-`cargo tauri dev` instead of the second line. Either way, the Vite dev server starts on
-port 1420 and the app reloads when Rust files change.
+If you have the Cargo subcommand (`cargo install tauri-cli --version "^2" --locked`),
+`cargo tauri dev` from `dropwheel/` does the same as the last line. Either way, the Vite
+dev server starts on port 1420 and the app reloads when Rust files change. The first run
+compiles for several minutes.
 
 To work on the menu without dragging files each time, list them in
 `DROPWHEEL_DEV_DROP`, separated by `;`. Development builds then open the menu for them in
@@ -77,13 +81,15 @@ the middle of the screen at startup. Release builds ignore the variable.
 
 ```powershell
 $env:DROPWHEEL_DEV_DROP = "C:\Users\me\Pictures\photo.jpg;C:\Users\me\report.pdf"
-npm --prefix ui run tauri dev
+npm run tauri dev
 ```
 
 ### Release build
 
+From the `ui` folder:
+
 ```powershell
-npm --prefix ui run tauri build
+npm run tauri build
 ```
 
 | Output                                                  | What it is                             |
@@ -92,7 +98,8 @@ npm --prefix ui run tauri build
 | `target\release\bundle\nsis\Dropwheel_0.1.0_x64-setup.exe` | Installer, per user, no admin rights |
 | `target\release\bundle\msi\Dropwheel_0.1.0_x64_en-US.msi`  | Installer, per machine               |
 
-The first release build downloads the NSIS and WiX toolsets.
+Paths are relative to `dropwheel/`. The first release build downloads the NSIS and WiX
+toolsets.
 
 ### Checks
 
@@ -100,8 +107,9 @@ The first release build downloads the NSIS and WiX toolsets.
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
-npm --prefix ui run typecheck
-npm --prefix ui test
+cd ui
+npm run typecheck
+npm test
 ```
 
 CI runs all of these on `windows-latest`, then builds both installers and the portable

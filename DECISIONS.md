@@ -27,7 +27,10 @@ Choices made while building Dropwheel, with the reason for each. Newest phase la
 - **Rust edition 2024, minimum Rust 1.90**, the same minimum Tauri needs.
 - **The `ui/` folder has its own `package.json`.** Its `tauri` script runs the CLI from the
   workspace root (`cd .. && tauri`). The Tauri config starts Vite with `cwd: "../ui"`, so
-  `cargo tauri dev` and `npm --prefix ui run tauri dev` both work from `dropwheel/`.
+  `cargo tauri dev` from `dropwheel/` and `npm run tauri dev` from `ui/` both work.
+  The README avoids `npm --prefix ui install`: some older npm versions read
+  `package.json` from the current folder and ignore the prefix. It failed that way on a
+  real Windows machine, while npm 10 handles it.
 - **Dependencies get `opt-level = 2` in dev builds.** Image codecs are very slow when not
   optimised, and later phases' tests decode real images.
 - **Clippy denies `unwrap`, `expect` and `panic!` outside tests.** It warns on them, and CI
