@@ -3,6 +3,7 @@
 
 mod commands;
 mod dialog;
+mod integration;
 mod jobs;
 mod pdfium;
 mod platform;
@@ -29,9 +30,16 @@ fn main() {
 fn run() -> anyhow::Result<()> {
     let app = tauri::Builder::default()
         // Must come first so a second launch is turned away before anything else starts.
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            shelf::set_visible(app, true);
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            // A notification's buttons launch a second copy with a URL; anything else
+            // is someone starting Dropwheel again.
+            if args.iter().any(|a| a.starts_with(integration::SCHEME)) {
+                integration::handle_args(app, &args);
+            } else {
+                shelf::set_visible(app, true);
+            }
         }))
+        .plugin(tauri_plugin_dialog::init())
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(log::LevelFilter::Info)
@@ -47,6 +55,8 @@ fn run() -> anyhow::Result<()> {
         )
         .invoke_handler(tauri::generate_handler![
             commands::settings_info,
+            commands::update_settings,
+            commands::open_notices,
             commands::radial_menu,
             commands::radial_hide,
             commands::run_action,
@@ -62,7 +72,15 @@ fn run() -> anyhow::Result<()> {
         .setup(|app| {
             let path = settings::default_path(app.handle())?;
             log::info!("settings: {}", path.display());
-            app.manage(SettingsStore::load(path));
+            let store = SettingsStore::load(path);
+            let start_with_windows = store.get().start_with_windows;
+            app.manage(store);
+            integration::register(app.handle());
+            // Keeps the Run entry pointing at this exe, wherever it now is.
+            if let Err(err) = integration::set_start_with_windows(app.handle(), start_with_windows)
+            {
+                log::warn!("could not update starting with Windows: {err:#}");
+            }
             app.manage(jobs::Jobs::default());
             app.manage(dialog::Dialogs::default());
             app.manage(previews::Previews::default());
@@ -72,6 +90,9 @@ fn run() -> anyhow::Result<()> {
             shelf::create(app.handle())?;
             #[cfg(debug_assertions)]
             dev_drop(app.handle());
+            // Started by Windows from a notification's button.
+            let args: Vec<String> = std::env::args().skip(1).collect();
+            integration::handle_args(app.handle(), &args);
             Ok(())
         })
         .build(tauri::generate_context!())

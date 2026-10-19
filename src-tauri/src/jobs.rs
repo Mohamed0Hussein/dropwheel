@@ -13,6 +13,7 @@ use dropwheel_core::{Action, CancelFlag, Error, Options, Params, paths};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, Runtime};
 
+use crate::integration;
 use crate::settings::SettingsStore;
 
 pub const STARTED_EVENT: &str = "job:started";
@@ -205,7 +206,40 @@ fn run<R: Runtime>(app: &AppHandle<R>, job: &Job, files: &[PathBuf], output_dir:
 
     let report = finished(job.id, outputs, failures, job.cancel.is_cancelled());
     log::info!("job {}: {}", job.id, report.summary);
+    notify(app, job.action, &report);
     emit(app, FINISHED_EVENT, report);
+}
+
+/// A Windows notification for a finished job, unless it was cancelled or notifications
+/// are off.
+fn notify<R: Runtime>(app: &AppHandle<R>, action: &dyn Action, report: &Finished) {
+    let wanted = app
+        .try_state::<SettingsStore>()
+        .is_none_or(|s| s.get().notifications);
+    if !wanted || report.cancelled {
+        return;
+    }
+    let target = report.outputs.first().map(|o| PathBuf::from(&o.path));
+    let body = match (report.outputs.as_slice(), report.failures.first()) {
+        ([only], None) => {
+            let name = Path::new(&only.path)
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_default();
+            format!("Saved {name}")
+        }
+        (_, Some(failure)) if report.outputs.is_empty() => failure.message.clone(),
+        _ => report.summary.clone(),
+    };
+    integration::notify(
+        app,
+        integration::Notice {
+            title: crate::dialog::title(action),
+            body,
+            several: report.outputs.len() > 1,
+            target,
+        },
+    );
 }
 
 fn file_size(path: &Path) -> u64 {

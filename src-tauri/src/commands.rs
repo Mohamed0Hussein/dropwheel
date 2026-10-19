@@ -8,11 +8,12 @@ use std::sync::Arc;
 
 use dropwheel_core::actions::{self, compress, metadata};
 use dropwheel_core::{Compress, FileKind, Params, pdf};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::ipc::Response;
 use tauri::{AppHandle, Manager, State, WebviewWindow};
 
 use crate::dialog::{self, DialogContext, Dialogs};
+use crate::integration;
 use crate::jobs::{self, Jobs};
 use crate::previews::{Preview, Previews};
 use crate::radial::{self, DroppedFile, Menu, MenuAction, RadialState};
@@ -25,14 +26,87 @@ type CommandResult<T> = Result<T, String>;
 pub struct SettingsInfo {
     path: String,
     settings: Settings,
+    version: String,
+    /// Whether this build can read PDFs.
+    pdf: bool,
 }
 
 #[tauri::command]
-pub fn settings_info(store: State<'_, SettingsStore>) -> SettingsInfo {
+pub fn settings_info(app: AppHandle, store: State<'_, SettingsStore>) -> SettingsInfo {
     SettingsInfo {
         path: store.path().display().to_string(),
         settings: store.get(),
+        version: app.package_info().version.to_string(),
+        pdf: pdf::engine::available(),
     }
+}
+
+/// Where results go, as the Settings window offers it.
+#[derive(Deserialize)]
+#[serde(tag = "mode", rename_all = "camelCase")]
+pub enum OutputChoice {
+    NextToOriginal,
+    Folder { path: String },
+}
+
+/// A change made in the Settings window; fields left out stay as they are.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SettingsChange {
+    output: Option<OutputChoice>,
+    start_with_windows: Option<bool>,
+    notifications: Option<bool>,
+    shelf_visible: Option<bool>,
+}
+
+/// Applies a change from the Settings window and returns the settings as they now are.
+/// A change that cannot be carried out is refused with a message, leaving the setting
+/// as it was.
+#[tauri::command]
+pub fn update_settings(
+    app: AppHandle,
+    store: State<'_, SettingsStore>,
+    change: SettingsChange,
+) -> CommandResult<SettingsInfo> {
+    if let Some(output) = change.output {
+        let dir = match output {
+            OutputChoice::NextToOriginal => None,
+            OutputChoice::Folder { path } => {
+                let path = std::path::PathBuf::from(path);
+                if !path.is_absolute() || !path.is_dir() {
+                    return Err("That folder does not exist.".into());
+                }
+                tempfile::tempfile_in(&path)
+                    .map_err(|_| "Dropwheel cannot save files in that folder.".to_string())?;
+                Some(path)
+            }
+        };
+        store.update(|s| s.output_dir = dir);
+    }
+    if let Some(on) = change.start_with_windows {
+        integration::set_start_with_windows(&app, on)
+            .map_err(|e| format!("Could not change starting with Windows: {e:#}"))?;
+        store.update(|s| s.start_with_windows = on);
+    }
+    if let Some(on) = change.notifications {
+        store.update(|s| s.notifications = on);
+    }
+    if let Some(visible) = change.shelf_visible {
+        crate::shelf::set_visible(&app, visible);
+    }
+    Ok(settings_info(app.clone(), store))
+}
+
+/// Opens the licences of the software Dropwheel is built from.
+#[tauri::command]
+pub fn open_notices(app: AppHandle) -> CommandResult<()> {
+    let dir = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let path = dir.join("THIRD-PARTY-NOTICES.txt");
+    std::fs::write(&path, include_str!("../../THIRD-PARTY-NOTICES.txt"))
+        .map_err(|e| e.to_string())?;
+    integration::open(&path);
+    Ok(())
 }
 
 /// The menu the radial window should show, for when it loads after the drop.

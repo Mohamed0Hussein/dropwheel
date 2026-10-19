@@ -19,10 +19,20 @@ tempfile.workspace = true
 tauri = { version = "2.12.4", features = ["tray-icon", "image-png", "protocol-asset"] }
 tauri-plugin-log = "2.10.1"
 tauri-plugin-single-instance = "2.5.4"
+tauri-plugin-dialog = "2.8.3"
 
 # Same major as Tauri's own, so it is not built twice.
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.62.2", features = ["Win32_UI_WindowsAndMessaging"] }
+windows = { version = "0.62.2", features = [
+    "Data_Xml_Dom",
+    "Foundation",
+    "UI_Notifications",
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Registry",
+    "Win32_System_WinRT",
+    "Win32_UI_WindowsAndMessaging",
+] }
 
 [lints]
 workspace = true

@@ -10,29 +10,70 @@
     <main class="settings">
       <header class="settings__header">
         <img class="settings__logo" src="/src/assets/icon.svg" alt="" width="40" height="40" />
-        <h1>Settings</h1>
+        <div>
+          <h1>Settings</h1>
+          <p class="settings__version" id="version"></p>
+        </div>
       </header>
 
       <section class="group" aria-labelledby="output-title">
-        <h2 id="output-title">Output</h2>
-        <div class="row">
-          <span class="row__label">Save results</span>
-          <span class="row__value" id="output-dir">…</span>
+        <h2 id="output-title">Results</h2>
+        <div class="card">
+          <label class="choice">
+            <input type="radio" name="output" value="next" id="output-next" />
+            <span>
+              <span class="choice__title">Next to the original</span>
+              <span class="choice__hint">photo.jpg gives photo_compressed.jpg in the same folder.</span>
+            </span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="output" value="folder" id="output-folder" />
+            <span>
+              <span class="choice__title">In one folder</span>
+              <span class="choice__hint" id="output-path" dir="ltr">No folder chosen</span>
+            </span>
+          </label>
+          <div class="card__actions">
+            <button type="button" id="choose-folder">Choose folder…</button>
+          </div>
+        </div>
+        <p class="note">Originals are never changed and existing files are never replaced.</p>
+      </section>
+
+      <section class="group" aria-labelledby="general-title">
+        <h2 id="general-title">General</h2>
+        <div class="card">
+          <label class="switch">
+            <span>
+              <span class="choice__title">Start with Windows</span>
+              <span class="choice__hint">The shelf is ready when you sign in.</span>
+            </span>
+            <input type="checkbox" role="switch" id="start-with-windows" />
+          </label>
+          <label class="switch">
+            <span>
+              <span class="choice__title">Notify when done</span>
+              <span class="choice__hint">A notification with Open and Show in Explorer.</span>
+            </span>
+            <input type="checkbox" role="switch" id="notifications" />
+          </label>
+          <label class="switch">
+            <span>
+              <span class="choice__title">Show the shelf</span>
+              <span class="choice__hint">Also from the tray icon.</span>
+            </span>
+            <input type="checkbox" role="switch" id="shelf-visible" />
+          </label>
         </div>
       </section>
 
-      <section class="group" aria-labelledby="startup-title">
-        <h2 id="startup-title">Startup</h2>
-        <div class="row">
-          <span class="row__label">Start with Windows</span>
-          <span class="row__value" id="start-with-windows">…</span>
-        </div>
-      </section>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
 
-      <p class="note">
-        These settings become editable in a later build. They are stored in
-        <code id="settings-path">…</code>
-      </p>
+      <footer class="note">
+        <p id="pdf-note" hidden>This build has no PDF support: PDFium was not downloaded when it was built.</p>
+        <p>Settings are stored in <code id="settings-path">…</code></p>
+        <p><button type="button" class="link" id="notices">Third-party licences</button></p>
+      </footer>
     </main>
     <script type="module" src="/src/settings.ts"></script>
   </body>

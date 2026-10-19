@@ -15,13 +15,26 @@ use tauri::{AppHandle, Manager, Runtime};
 /// Moving the shelf fires a stream of events; write once it has settled.
 const SAVE_DELAY: Duration = Duration::from_millis(500);
 
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Settings {
     pub shelf: ShelfSettings,
     /// Where results go. `None` writes them next to each source file.
     pub output_dir: Option<PathBuf>,
     pub start_with_windows: bool,
+    /// A Windows notification when a job finishes.
+    pub notifications: bool,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Settings {
+            shelf: ShelfSettings::default(),
+            output_dir: None,
+            start_with_windows: false,
+            notifications: true,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

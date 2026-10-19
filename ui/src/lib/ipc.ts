@@ -10,11 +10,23 @@ export interface Settings {
   /** `null` writes results next to each source file. */
   outputDir: string | null;
   startWithWindows: boolean;
+  notifications: boolean;
 }
 
 export interface SettingsInfo {
   path: string;
   settings: Settings;
+  version: string;
+  /** Whether this build can read PDFs. */
+  pdf: boolean;
+}
+
+/** Mirrors `SettingsChange` in src-tauri/src/commands.rs; leave out what stays. */
+export interface SettingsChange {
+  output?: { mode: "nextToOriginal" } | { mode: "folder"; path: string };
+  startWithWindows?: boolean;
+  notifications?: boolean;
+  shelfVisible?: boolean;
 }
 
 export type FileKind =
@@ -170,6 +182,8 @@ export const EVENTS = {
 } as const;
 
 export const settingsInfo = () => invoke<SettingsInfo>("settings_info");
+export const updateSettings = (change: SettingsChange) => invoke<SettingsInfo>("update_settings", { change });
+export const openNotices = () => invoke<void>("open_notices");
 export const radialMenu = () => invoke<Menu | null>("radial_menu");
 export const radialHide = () => invoke<void>("radial_hide");
 export const runAction = (dropId: number, actionId: string) =>

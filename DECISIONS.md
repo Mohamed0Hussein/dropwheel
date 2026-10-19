@@ -497,6 +497,86 @@ Choices made while building Dropwheel, with the reason for each. Newest phase la
 - **Debug builds keep line tables only**, without full debug information: the test
   binaries had grown to over 300 MB each and filled the disk.
 
+## Phase 6: settings, notifications, start with Windows, installers
+
+### Settings window
+
+- **Changes apply at once**, with no Save button. Each one goes to the app as a single
+  change, so the window never sends back a stale copy of settings changed elsewhere,
+  such as the shelf position or the shelf hidden from the tray. The window reloads them
+  when it gets focus.
+- **A change that cannot be made is refused** and the control springs back, with the
+  reason under it. A results folder must exist and accept a test file; turning on
+  Start with Windows must manage to write the registry.
+- **The folder picker is Tauri's dialog plugin** (MIT/Apache-2.0), allowed for the
+  Settings window only.
+- **The window is 700 px tall** so everything fits, or less on a short screen, where the
+  page scrolls.
+
+### Notifications
+
+- **Windows toast notifications through WinRT** (`windows` crate, already in the build
+  through Tauri), not `tauri-plugin-notification`. The plugin cannot add buttons on
+  Windows, and the brief asks for Open and Show in Explorer.
+- **The app identifier is the notifications' AppUserModelID.** Tauri's NSIS installer
+  already stamps it on the Start menu shortcut. For the portable exe, which has no
+  shortcut, Dropwheel registers the ID's display name and icon under
+  `HKCU\Software\Classes\AppUserModelId` at each start, so its notifications say
+  "Dropwheel" with its icon either way.
+- **Buttons use protocol activation with Dropwheel's own `dropwheel:` scheme**, registered
+  per user at each start (so a moved portable copy keeps working). This works from the
+  notification centre after the popup is gone, and even after Dropwheel has quit:
+  Windows starts it with the URL, and a running copy receives it through the
+  single-instance plugin. The other way, a COM activator, needs a registered COM
+  server and much more code for the same result. Plain `file:///` links for Open were
+  also ruled out: Windows' launcher refuses local `file:` URIs in some cases.
+- **The scheme is deliberately weak**, since any web page can launch it.
+  `dropwheel:reveal` only selects an existing file in Explorer. `dropwheel:open` opens
+  a file only if Dropwheel wrote it: the last 200 results are remembered in
+  `results.json` in the local app data folder. Anything else is logged and ignored.
+- **Clicking the notification itself opens the result**, the same as Open.
+- **With several results**, Open becomes Open folder (the folder of the first result)
+  and Show in Explorer selects the first result.
+- **Cancelled jobs do not notify**; failed ones do, with the error.
+- **Notifications are on by default** and can be turned off in Settings.
+
+### Start with Windows
+
+- **A value in `HKCU\...\CurrentVersion\Run`**, named after the product, as
+  `"path\to\dropwheel.exe" --autostart`. No admin rights are needed, and it is the same
+  value name Tauri's NSIS uninstaller already removes. It is rewritten at each start,
+  so it follows a portable exe that moved. `tauri-plugin-autostart` would do the same
+  with another dependency.
+
+### Installers
+
+- **NSIS is the recommended installer**: per user, no admin rights, and its uninstaller
+  removes everything Dropwheel registered. A hook (`src-tauri/windows/hooks.nsh`)
+  removes the `dropwheel:` scheme (only when it still points at that install, not at a
+  portable copy) and the notification registration. Nothing is removed on updates.
+- **The MSI stays as built by Tauri.** Removing per-user registry entries from a
+  per-machine MSI needs custom WiX components I could not test here. README lists
+  what it leaves behind.
+- **The portable exe is the release build itself.** PDFium, the fonts and the pages are
+  inside it, so there is nothing else to ship.
+
+### Licences
+
+- **`THIRD-PARTY-NOTICES.txt`** holds every licence text and copyright notice of what is
+  built into the app: PDFium and its libraries, the fonts, 364 Rust crates and the two
+  JavaScript packages in the pages. `scripts/make-notices.py` writes it from
+  `cargo metadata` for the Windows target, with each crate's own licence files; CI
+  fails if it is out of date. It is embedded in the exe, and Settings → Third-party
+  licences opens a copy.
+- **Where a crate offers a choice, MIT is used**, then Apache-2.0, then the others. The
+  Apache and Mozilla licences are the same text for every crate, so it appears once at
+  the end, with each crate's copyright lines kept.
+- **Four crates are under the Mozilla Public License 2.0** (`cssparser`, `selectors` and
+  `dtoa-short`, which Tauri uses, and `option-ext`). The MPL is a file-level licence:
+  shipping them unchanged in a closed or differently licensed app is allowed, as long
+  as the notices say where their source is. They do (crates.io). This needs no decision:
+  every Tauri app on Windows carries them.
+
 ## Open questions
 
 - **Reading HEIC (phase 3).** Decided: Windows' codec. One option was to decode through Windows Imaging Component when the

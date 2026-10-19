@@ -5,3 +5,4 @@
 /src-tauri/gen/
 *.log
 /vendor/
+__pycache__/
