@@ -1,9 +1,14 @@
 //! The actions the radial menu offers, in menu order.
 //!
-//! Phase 2 registers every action with its final id, label, group and applicability.
-//! Each `run` reports [`crate::Error::NotAvailable`] until its implementation lands.
+//! Actions that have not been implemented yet report [`crate::Error::NotAvailable`].
 
+mod background;
+pub mod compress;
 mod convert;
+pub mod crop;
+pub mod edit;
+pub mod metadata;
+mod support;
 mod tools;
 
 pub use convert::{Convert, targets};
@@ -23,13 +28,13 @@ static ALL: [&dyn Action; 17] = [
     &convert::TIFF,
     &convert::AVIF,
     &convert::HEIC,
-    &tools::COMPRESS,
-    &tools::CROP,
-    &tools::EDIT,
+    &compress::COMPRESS,
+    &crop::CROP,
+    &edit::EDIT,
     &tools::ANNOTATE,
     &tools::REDACT,
-    &tools::METADATA,
-    &tools::ADD_BACKGROUND,
+    &metadata::METADATA,
+    &background::ADD_BACKGROUND,
 ];
 
 pub fn all() -> &'static [&'static dyn Action] {
@@ -59,7 +64,16 @@ mod tests {
 
     use super::*;
     use crate::action::{ActionGroup, Options};
+    use crate::imaging;
     use crate::kind::FileKind::*;
+
+    /// HEIC is only offered where Microsoft's encoder is installed.
+    fn with_heic(mut labels: Vec<&'static str>) -> Vec<&'static str> {
+        if !imaging::can_encode(Heic) {
+            labels.retain(|l| *l != "HEIC");
+        }
+        labels
+    }
 
     fn labels(kinds: &[FileKind], group: ActionGroup) -> Vec<&'static str> {
         for_kinds(kinds)
@@ -118,7 +132,7 @@ mod tests {
     fn images() {
         assert_eq!(
             converts(&[Jpeg]),
-            ["PDF", "PNG", "WEBP", "BMP", "TIFF", "AVIF", "HEIC"]
+            with_heic(vec!["PDF", "PNG", "WEBP", "BMP", "TIFF", "AVIF", "HEIC"])
         );
         assert_eq!(
             tools(&[Jpeg]),
@@ -154,7 +168,7 @@ mod tests {
     fn mixed_drops_offer_the_common_actions() {
         assert_eq!(
             converts(&[Jpeg, Png]),
-            ["PDF", "WEBP", "BMP", "TIFF", "AVIF", "HEIC"]
+            with_heic(vec!["PDF", "WEBP", "BMP", "TIFF", "AVIF", "HEIC"])
         );
         assert!(!tools(&[Jpeg, Png]).contains(&"ADD BACKGROUND"));
         assert_eq!(converts(&[Png, Docx]), ["PDF"]);
@@ -167,18 +181,48 @@ mod tests {
             Jpeg, Png, Webp, Bmp, Tiff, Gif, Ico, Avif, Heic, Pdf, Docx, Txt,
         ];
         for a in all() {
-            assert!(kinds.iter().any(|k| a.applicable(*k)), "{}", a.id());
+            let heic_unavailable = a.id() == "convert.heic" && !imaging::can_encode(Heic);
+            assert!(
+                heic_unavailable || kinds.iter().any(|k| a.applicable(*k)),
+                "{}",
+                a.id()
+            );
             assert!(!a.applicable(Unknown), "{}", a.id());
         }
     }
 
     #[test]
-    fn placeholders_say_so() {
+    fn unfinished_actions_say_so() {
+        let dir = tempfile::tempdir().unwrap();
+        let png = dir.path().join("a.png");
+        std::fs::write(&png, b"\x89PNG\r\n\x1a\n").unwrap();
+        for id in ["annotate", "redact", "convert.pdf"] {
+            let err = find(id)
+                .unwrap()
+                .run(&png, &Options::default(), dir.path())
+                .unwrap_err();
+            assert_eq!(err.code(), "not_available", "{id}");
+        }
+    }
+
+    #[test]
+    fn missing_input_is_reported() {
         for a in all() {
             let err = a
-                .run(Path::new("in.png"), &Options::default(), Path::new("."))
+                .run(
+                    Path::new("/no/such/file.png"),
+                    &Options::default(),
+                    Path::new("."),
+                )
                 .unwrap_err();
-            assert_eq!(err.code(), "not_available", "{}", a.id());
+            assert!(
+                matches!(
+                    err.code(),
+                    "not_found" | "invalid_options" | "not_available"
+                ),
+                "{}: {err}",
+                a.id()
+            );
         }
     }
 }

@@ -2,8 +2,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
+mod dialog;
 mod jobs;
 mod platform;
+mod previews;
 mod radial;
 mod settings;
 mod settings_window;
@@ -47,11 +49,22 @@ fn run() -> anyhow::Result<()> {
             commands::radial_menu,
             commands::radial_hide,
             commands::run_action,
+            commands::open_dialog,
+            commands::dialog_info,
+            commands::image_info,
+            commands::image_preview,
+            commands::estimate_compress,
+            commands::read_metadata,
+            commands::dialog_run,
+            commands::cancel_job,
         ])
         .setup(|app| {
             let path = settings::default_path(app.handle())?;
             log::info!("settings: {}", path.display());
             app.manage(SettingsStore::load(path));
+            app.manage(jobs::Jobs::default());
+            app.manage(dialog::Dialogs::default());
+            app.manage(previews::Previews::default());
             tray::create(app.handle())?;
             radial::create(app.handle())?;
             shelf::create(app.handle())?;

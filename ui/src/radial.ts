@@ -4,7 +4,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { byId, svg } from "./lib/dom";
 import { TOOL_ICONS } from "./lib/icons";
-import { EVENTS, radialHide, radialMenu, runAction, type Menu, type MenuAction } from "./lib/ipc";
+import { EVENTS, openDialog, radialHide, radialMenu, runAction, type Menu, type MenuAction } from "./lib/ipc";
 import { lockDownWebview } from "./lib/webview";
 import { wedgeCentre, wedgePath, type Ring } from "./lib/wedges";
 
@@ -203,9 +203,10 @@ async function choose(action: MenuAction, from: SVGGElement): Promise<void> {
   const dropId = menu.dropId;
   close();
   try {
-    await runAction(dropId, action.id);
+    if (action.dialog) await openDialog(dropId, action.id);
+    else await runAction(dropId, action.id);
   } catch (err) {
-    console.error("run_action failed", err);
+    console.error(`${action.id} failed`, err);
   }
 }
 

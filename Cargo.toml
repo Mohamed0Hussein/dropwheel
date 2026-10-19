@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/core", "src-tauri"]
+members = ["crates/core", "crates/wic", "src-tauri"]
 
 [workspace.package]
 version = "0.1.0"
@@ -10,6 +10,7 @@ publish = false
 
 [workspace.dependencies]
 dropwheel-core = { path = "crates/core" }
+dropwheel-wic = { path = "crates/wic" }
 anyhow = "1.0.100"
 log = "0.4.28"
 serde = { version = "1.0.228", features = ["derive"] }

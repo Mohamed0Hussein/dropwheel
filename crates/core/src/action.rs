@@ -42,9 +42,56 @@ pub trait Action: Send + Sync {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Params {
-    /// The action takes no input from the user, as with conversions.
+    /// The action takes no input from the user, as with conversions and removing metadata.
     #[default]
     None,
+    Compress(Compress),
+    Crop(Crop),
+    Edit(Edit),
+    Background(Background),
+}
+
+/// How hard to compress.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "mode", rename_all = "snake_case")]
+pub enum Compress {
+    /// Encoder quality from 1 to 100. For PNG, below 90 means fewer colours.
+    Quality { percent: u8 },
+    /// Aim for files no larger than this, lowering quality and then size as needed.
+    Size { bytes: u64 },
+}
+
+/// A rectangle in the pixels of an upright image `ref_width` × `ref_height`. Applied to
+/// an image of another size, it is scaled to match, so one crop serves a whole batch.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Crop {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+    pub ref_width: u32,
+    pub ref_height: u32,
+}
+
+/// Mirrors the Edit dialog. Brightness and contrast run from -100 to 100, with 0 leaving
+/// the image unchanged, and follow the CSS filters the dialog previews with.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Edit {
+    /// Clockwise: 0, 90, 180 or 270.
+    pub rotate: u16,
+    pub flip_horizontal: bool,
+    pub flip_vertical: bool,
+    pub grayscale: bool,
+    pub brightness: i8,
+    pub contrast: i8,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Background {
+    /// RGB.
+    pub color: [u8; 3],
 }
 
 type ProgressFn = dyn Fn(f32) + Send + Sync;
@@ -122,6 +169,46 @@ mod tests {
         let json = serde_json::to_string(&Params::None).unwrap();
         assert_eq!(json, r#"{"type":"none"}"#);
         assert_eq!(serde_json::from_str::<Params>(&json).unwrap(), Params::None);
+    }
+
+    #[test]
+    fn params_from_the_dialogs() {
+        let parse = |s: &str| serde_json::from_str::<Params>(s).unwrap();
+        assert_eq!(
+            parse(r#"{"type":"compress","mode":"quality","percent":70}"#),
+            Params::Compress(Compress::Quality { percent: 70 })
+        );
+        assert_eq!(
+            parse(r#"{"type":"compress","mode":"size","bytes":500000}"#),
+            Params::Compress(Compress::Size { bytes: 500_000 })
+        );
+        assert_eq!(
+            parse(r#"{"type":"crop","x":1,"y":2,"width":3,"height":4,"refWidth":5,"refHeight":6}"#),
+            Params::Crop(Crop {
+                x: 1,
+                y: 2,
+                width: 3,
+                height: 4,
+                ref_width: 5,
+                ref_height: 6
+            })
+        );
+        assert_eq!(
+            parse(r#"{"type":"edit","rotate":90,"grayscale":true,"brightness":-20}"#),
+            Params::Edit(Edit {
+                rotate: 90,
+                grayscale: true,
+                brightness: -20,
+                ..Edit::default()
+            })
+        );
+        assert_eq!(
+            parse(r#"{"type":"background","color":[255,128,0]}"#),
+            Params::Background(Background {
+                color: [255, 128, 0]
+            })
+        );
+        assert!(serde_json::from_str::<Params>(r#"{"type":"edit","brightness":300}"#).is_err());
     }
 
     #[test]

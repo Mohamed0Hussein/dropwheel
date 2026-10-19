@@ -1,0 +1,521 @@
+@import "./base.css";
+
+:root {
+  --page-bg: #f7f6fc;
+  --stage-bg: #ecebf5;
+  --card-bg: #ffffff;
+  --line: rgb(43 36 86 / 0.12);
+  --text: var(--indigo-950);
+  --muted: rgb(21 18 43 / 0.62);
+  --primary-bg: var(--indigo-800);
+  --primary-text: var(--lilac-50);
+  --accent-line: var(--ember-500);
+  --ok: #1f7a4d;
+  --error: #c2362f;
+  --check-a: #ffffff;
+  --check-b: #e3e1ee;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page-bg: var(--indigo-950);
+    --stage-bg: #100e22;
+    --card-bg: var(--indigo-900);
+    --line: rgb(207 200 255 / 0.14);
+    --text: var(--lilac-50);
+    --muted: rgb(245 243 255 / 0.62);
+    --primary-bg: var(--ember);
+    --primary-text: var(--indigo-950);
+    --accent-line: var(--ember-300);
+    --ok: #6fd3a0;
+    --error: #ff8b85;
+    --check-a: #2a2645;
+    --check-b: #211d39;
+  }
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--page-bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* minmax(0, …): long file names and paths in the header and footer are cut with an
+   ellipsis instead of widening the whole window. */
+.app {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  height: 100%;
+}
+
+.top {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 20px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+h1 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.top__subtitle {
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  min-height: 0;
+}
+
+.stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 20px;
+  overflow: hidden;
+  background: var(--stage-bg);
+}
+
+.stage__image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.18);
+}
+
+.stage--checker {
+  background:
+    repeating-conic-gradient(var(--check-a) 0% 25%, var(--check-b) 0% 50%) 0 0 / 20px 20px;
+}
+
+.stage__message {
+  max-width: 420px;
+  margin: 0;
+  color: var(--muted);
+  text-align: center;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px 18px 24px;
+  overflow-y: auto;
+  border-left: 1px solid var(--line);
+  background: var(--card-bg);
+}
+
+.group {
+  display: grid;
+  gap: 10px;
+}
+
+.group h2 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.group h2:empty {
+  display: none;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.hint--warn {
+  color: var(--error);
+}
+
+button {
+  min-height: 30px;
+  padding: 5px 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--card-bg);
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent-line);
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.crop__box:focus-visible {
+  outline: 2px solid var(--accent-line);
+  outline-offset: 2px;
+}
+
+button.primary {
+  border-color: transparent;
+  background: var(--primary-bg);
+  color: var(--primary-text);
+  font-weight: 600;
+}
+
+.segmented,
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.segmented button,
+.chip {
+  flex: 1 1 auto;
+}
+
+[aria-checked="true"],
+.toggle[aria-pressed="true"] {
+  border-color: var(--accent-line);
+  box-shadow: inset 0 0 0 1px var(--accent-line);
+  font-weight: 600;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.slider {
+  display: grid;
+  gap: 4px;
+}
+
+.slider[hidden] {
+  display: none;
+}
+
+.slider__top {
+  display: flex;
+  justify-content: space-between;
+}
+
+.slider output {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--ember-500);
+}
+
+.sizes {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.sizes dt {
+  color: var(--muted);
+}
+
+.sizes dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.results {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.results li {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: var(--stage-bg);
+  font-variant-numeric: tabular-nums;
+}
+
+.results__name {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pair {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pair label {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+input[type="number"],
+select {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--page-bg);
+}
+
+/* Crop */
+.crop {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Not clipped: handles on the image's edge must stay whole and grabbable. The box's
+   shadow dims the stage around the image too, which the stage itself clips. */
+.crop__frame {
+  position: relative;
+  touch-action: none;
+}
+
+.crop__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.crop__box {
+  position: absolute;
+  box-shadow: 0 0 0 9999px rgb(10 8 24 / 0.55);
+  outline: 1px solid rgb(255 255 255 / 0.9);
+  cursor: move;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.35), rgb(255 255 255 / 0.35)),
+    linear-gradient(rgb(255 255 255 / 0.35), rgb(255 255 255 / 0.35)),
+    linear-gradient(rgb(255 255 255 / 0.35), rgb(255 255 255 / 0.35)),
+    linear-gradient(rgb(255 255 255 / 0.35), rgb(255 255 255 / 0.35));
+  background-position: 33.33% 0, 66.66% 0, 0 33.33%, 0 66.66%;
+  background-size: 1px 100%, 1px 100%, 100% 1px, 100% 1px;
+  background-repeat: no-repeat;
+}
+
+.crop__handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid var(--indigo-800);
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.crop__handle--nw { left: 0; top: 0; cursor: nwse-resize; }
+.crop__handle--n { left: 50%; top: 0; cursor: ns-resize; }
+.crop__handle--ne { left: 100%; top: 0; cursor: nesw-resize; }
+.crop__handle--e { left: 100%; top: 50%; cursor: ew-resize; }
+.crop__handle--se { left: 100%; top: 100%; cursor: nwse-resize; }
+.crop__handle--s { left: 50%; top: 100%; cursor: ns-resize; }
+.crop__handle--sw { left: 0; top: 100%; cursor: nesw-resize; }
+.crop__handle--w { left: 0; top: 50%; cursor: ew-resize; }
+
+/* Edit */
+.edit {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.edit__image {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.18);
+  transition: transform 160ms var(--ease-out);
+}
+
+/* Metadata */
+.meta-stage {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 12px;
+  align-self: stretch;
+  justify-self: stretch;
+  min-height: 0;
+}
+
+.meta {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card-bg);
+}
+
+.meta table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.meta th,
+.meta td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: start;
+  vertical-align: top;
+}
+
+.meta tbody th[scope="row"] {
+  width: 38%;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.meta td {
+  overflow-wrap: anywhere;
+}
+
+.meta__group th {
+  padding-top: 12px;
+  background: var(--stage-bg);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.meta__summary {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Background */
+.stage__image--backdrop {
+  box-shadow: none;
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.swatch {
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.colour {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.colour input {
+  width: 44px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: none;
+}
+
+/* Footer */
+.bottom {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+}
+
+.status {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status[data-tone="ok"] {
+  color: var(--ok);
+}
+
+.status[data-tone="error"] {
+  color: var(--error);
+}
+
+.progress {
+  width: 160px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--stage-bg);
+}
+
+.progress__bar {
+  width: 0;
+  height: 100%;
+  background: var(--ember);
+  transition: width 160ms linear;
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 760px) {
+  .main {
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+}

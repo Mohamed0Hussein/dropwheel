@@ -5,10 +5,12 @@
   "windows": [
     "shelf",
     "radial",
-    "settings"
+    "settings",
+    "dialog-*"
   ],
   "permissions": [
     "core:default",
-    "core:window:allow-start-dragging"
+    "core:window:allow-start-dragging",
+    "core:window:allow-close"
   ]
 }

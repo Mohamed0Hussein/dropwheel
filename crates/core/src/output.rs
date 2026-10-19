@@ -37,9 +37,13 @@ pub fn write_new(
 
     let dir = paths::extended(out_dir).map_err(|e| Error::io(out_dir, e))?;
     fs::create_dir_all(&dir).map_err(|e| Error::io(out_dir, e))?;
-    let mut tmp = tempfile::Builder::new()
-        .prefix(".dropwheel-")
-        .suffix(".tmp")
+    let mut builder = tempfile::Builder::new();
+    builder.prefix(".dropwheel-").suffix(".tmp");
+    // Temporary files are private; a result is an ordinary file. Windows inherits the
+    // folder's permissions either way.
+    #[cfg(unix)]
+    builder.permissions(std::os::unix::fs::PermissionsExt::from_mode(0o644));
+    let mut tmp = builder
         .tempfile_in(&dir)
         .map_err(|e| Error::io(out_dir, e))?;
 
@@ -222,6 +226,16 @@ mod tests {
         let out = write(&input, &deep, b"result");
         assert_eq!(out, deep.join("photo_compressed.jpg"));
         assert_eq!(fs::read(&out).unwrap(), b"result");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn results_are_ordinary_files() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = tempfile::tempdir().unwrap();
+        let out = write(&dir.path().join("a.jpg"), dir.path(), b"x");
+        let mode = fs::metadata(out).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode & 0o044, 0o044, "{mode:o}");
     }
 
     #[test]

@@ -197,9 +197,123 @@ Choices made while building Dropwheel, with the reason for each. Newest phase la
   action, and the shelf reported the result. Headless Chromium screenshots covered the
   menu and the shelf states in both themes.
 
+## Phase 3: image actions
+
+### Libraries
+
+- **`image` crate for reading** JPEG, PNG, WebP, BMP, TIFF, GIF and ICO. Every decode
+  runs under limits: no side over 30,000 pixels and at most 1 GiB allocated. A small file
+  claiming enormous dimensions fails at once with a clear message instead of exhausting
+  memory (tested with a crafted "60,000 × 60,000" PNG).
+- **EXIF orientation is applied on decode**, so every action works on the picture the
+  way it is seen, and crop coordinates match the preview.
+- **JPEG is written with `jpeg-encoder`** rather than the `image` crate's encoder. It
+  supports progressive output and optimised Huffman tables, so files are smaller at the
+  same quality, and it embeds colour profiles. Chroma subsampling is 4:2:0 below 90%
+  quality and 4:4:4 above. The licence is MIT/Apache plus IJG, whose only condition is the
+  credit line in the README.
+- **Lossy WebP uses the `webp` crate** (Google's libwebp, BSD), because the `image` crate
+  writes lossless WebP only. It is C code compiled with the MSVC tools Rust already
+  needs. Conversions from photos (JPG, WebP, AVIF, HEIC) are lossy at 90%. From graphics
+  (PNG, BMP, GIF, TIFF, ICO) they are lossless.
+- **TIFF is written with the `tiff` crate**, losslessly with Deflate and a horizontal
+  predictor. The `image` crate writes TIFF uncompressed.
+- **AVIF is written with ravif** (through the `image` crate) at speed 6. It is pure
+  Rust, so no assembler is needed to build it.
+- **HEIC and AVIF are read, and HEIC written, through Windows Imaging Component**, as
+  decided after phase 2. That code is unsafe COM, so it lives in its own small crate,
+  `crates/wic`, and core keeps `#![forbid(unsafe_code)]`. A file is read with `std::fs`
+  (long paths, clear errors) and handed to WIC from memory. HEIC writing is probed once
+  by encoding a 16 × 16 image: the HEIF container is free, but the HEVC encoder inside is
+  a paid extension, and its absence only shows when a frame is written. The HEIC wedge
+  appears only when that probe succeeds.
+- **HEIC is not rotated after decoding.** HEIF stores rotation as container properties
+  that the codec applies; applying EXIF orientation as well would turn iPhone photos
+  twice. This is one of the things to check on a real Windows machine.
+- **AVIF reading uses WIC too**, for the same reason as HEIC. The pure-Rust decoder
+  (`avif-decode` with `rav1d`) needs Rust 1.98. The `image` crate's own AVIF decoding
+  pulls in `mp4parse` (MPL-2.0) and a C build of dav1d.
+- **PNG palette reduction uses NeuQuant** (`color_quant`, MIT), which the `image` crate
+  already depends on. libimagequant would give better palettes but is GPL. Fully
+  transparent pixels get a palette entry of their own: NeuQuant treats alpha as one more
+  channel and otherwise smeared transparency into visible colours.
+- **Metadata is read with `kamadak-exif`.** PNG text chunks come from the `png` crate.
+  JPEG comments, IPTC and XMP blocks come from `img-parts`. XMP is reported by size, not
+  parsed.
+
+### Behaviour
+
+- **Compress, by percentage,** sets the encoder quality. For PNG, which is lossless,
+  below 90% reduces the colours to a palette of 64 to 256 entries. TIFF stays lossless,
+  so only a target size, which scales the picture down, makes it smaller.
+- **Compress, to a target size,** plans on a copy at most 1024 px wide. It searches for
+  the highest quality that fits, shrinking the picture when even 10% quality is too big.
+  It then encodes at full size and steps down until the real file fits. This keeps AVIF
+  usable: a full-size search would encode a large photo a dozen times.
+- **The live estimate** encodes the dialog's preview (at most 1600 px) and scales the
+  size by the pixel count. It tends to run a little high, and the dialog shows the real
+  result afterwards. With several files it is for the first one, and says so.
+- **Crop rectangles are in the pixels of the upright full image**, with the size they
+  were drawn on. Other files in a batch get the rectangle scaled to their size. The crop
+  box can never leave the picture, and aspect chips keep their ratio while resizing from
+  any handle.
+- **Edit mirrors CSS.** The dialog previews with `filter: brightness() contrast()
+  grayscale()` and `transform: rotate() scale()`, and Rust applies the same formulas in
+  the same order (sRGB, Rec. 709 luma for grayscale; flips before rotation). The saved
+  file matches the preview.
+- **Edits are saved in the original format at high quality** (92, or 85 for AVIF),
+  because a lossy file's original quality is unknown. Formats this machine cannot write
+  are saved as the nearest one it can: ICO as PNG, HEIC as JPEG without the encoder.
+- **Remove all metadata does not re-encode JPEG, PNG or WebP.** It removes:
+  - JPEG: the APP1, APP3 to APP13 and APP15 segments, comments, the MPF segment, and
+    anything after the end marker.
+  - PNG: the tEXt, zTXt, iTXt, eXIf and tIME chunks.
+  - WebP: the EXIF and XMP chunks.
+
+  The colour profile and the segments the picture needs (JFIF, Adobe) stay. TIFF, AVIF
+  and HEIC are rewritten from their pixels.
+
+  `img-parts` leaves the WebP header claiming an XMP chunk after it is removed, and
+  decoders then reject the file. Dropwheel clears that flag itself; a test caught it.
+- **Structural TIFF tags** (width, strip offsets, compression and so on) are not shown
+  as metadata.
+- **Output files are ordinary files.** `tempfile` creates private files on Unix, so
+  results are given normal read permissions. On Windows they inherit the folder's
+  permissions, as before.
+
+### App
+
+- **Each dialog is its own window** (`dialog-1`, `dialog-2`, …) and remembers the files
+  it was opened for. Its commands find those files by window label, so a dialog cannot
+  act on anything else, and several can be open at once.
+- **Previews come from Rust**, not the asset protocol. TIFF, HEIC and AVIF have no
+  browser decoder, and Rust's preview is already upright and sized. Each file is decoded
+  once per dialog session (six recent files are cached), and the bytes travel as binary
+  IPC rather than JSON.
+- **Every command that decodes is async** and runs on a blocking thread, so the main
+  thread never waits on a large photo.
+- **Jobs can be cancelled.** Each has a cancel flag that the dialog's Cancel button sets.
+  Actions check it between steps, and a cancelled file leaves no partial output.
+- **Job results carry input and output sizes**, which the Compress dialog shows per
+  file.
+- **File names display left to right**, as in Explorer, even when they are Arabic.
+  Metadata values pick their direction from their own text.
+
+### Tests
+
+- **Fixtures are generated by `crates/core/fixtures/make_fixtures.py`** (Pillow). Each
+  is a few kilobytes. The photo has four coloured quadrants and EXIF orientation 6, so
+  tests can tell which way up a result is. There is also real EXIF, GPS, XMP, a comment,
+  Arabic PNG text, and broken files: truncated, garbage, empty, and a decompression
+  bomb.
+- **One integration test per conversion path** (36), plus a test of every action on
+  real files. Every broken file is run through every action, which must fail cleanly
+  and leave no temporary files. AVIF and HEIC sources need Windows codecs and are not in
+  the automated tests.
+
 ## Open questions
 
-- **Reading HEIC (phase 3).** One option is to decode through Windows Imaging Component when the
+- **Reading HEIC (phase 3).** Decided: Windows' codec. One option was to decode through Windows Imaging Component when the
   free "HEIF Image Extensions" from the Microsoft Store is installed. That adds nothing to
   bundle or license. The other is `libheif-rs`, which pulls in libheif and libde265. Both
   are **LGPL-3.0**, and shipping them means dynamic linking plus license notices. I
@@ -213,8 +327,8 @@ Choices made while building Dropwheel, with the reason for each. Newest phase la
 - **PDFium (phase 5).** `pdfium-render` needs `pdfium.dll` shipped with the app. The
   prebuilt binaries are BSD-3-Clause/Apache-2.0, which is permissive and only requires
   license notices.
-- **Writing HEIC (phase 3).** HEIC is in the menu as a Convert target, as the brief
-  asks. But no free, permissively licensed HEVC encoder exists. Windows can encode HEIC
+- **Writing HEIC (phase 3).** Decided: shown only when the encoder is installed. HEIC
+  is in the menu as a Convert target, as the brief asks. But no free, permissively licensed HEVC encoder exists. Windows can encode HEIC
   through WIC only with Microsoft's "HEVC Video Extensions", a paid Store app. The
   open-source encoder, x265, is GPL-2.0. The options: drop HEIC as a target, offer it
   only when the paid extension is installed (detected at runtime), or accept x265 under

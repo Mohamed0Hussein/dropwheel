@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use dropwheel_core::{ActionGroup, FileKind, actions};
+use dropwheel_core::{Action, ActionGroup, FileKind, actions};
 use serde::Serialize;
 use tauri::utils::config::BackgroundThrottlingPolicy;
 use tauri::{
@@ -51,6 +51,19 @@ pub struct MenuAction {
     pub id: &'static str,
     pub label: &'static str,
     pub group: ActionGroup,
+    /// Choosing it opens a settings dialog instead of running straight away.
+    pub dialog: bool,
+}
+
+impl From<&'static dyn Action> for MenuAction {
+    fn from(a: &'static dyn Action) -> Self {
+        MenuAction {
+            id: a.id(),
+            label: a.label(),
+            group: a.group(),
+            dialog: crate::dialog::has_dialog(a.id()),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -137,11 +150,7 @@ pub fn open<R: Runtime>(app: &AppHandle<R>, paths: Vec<PathBuf>, point: Physical
         let kinds: Vec<FileKind> = files.iter().map(|f| f.kind).collect();
         let actions = actions::for_kinds(&kinds)
             .into_iter()
-            .map(|a| MenuAction {
-                id: a.id(),
-                label: a.label(),
-                group: a.group(),
-            })
+            .map(MenuAction::from)
             .collect();
         let menu = Menu {
             drop_id,

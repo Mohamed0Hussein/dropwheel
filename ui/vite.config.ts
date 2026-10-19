@@ -19,6 +19,7 @@ export default defineConfig({
       input: {
         shelf: page("shelf"),
         radial: page("radial"),
+        dialog: page("dialog"),
         settings: page("settings"),
       },
     },

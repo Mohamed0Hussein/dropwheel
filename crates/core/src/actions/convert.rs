@@ -1,7 +1,9 @@
 use std::path::{Path, PathBuf};
 
-use crate::action::{Action, ActionGroup, Options};
+use super::support;
+use crate::action::{Action, ActionGroup, Options, Params};
 use crate::error::{Error, Result};
+use crate::imaging::{self, EncodeOptions};
 use crate::kind::FileKind::{self, *};
 
 /// Converts a file to another format.
@@ -62,12 +64,44 @@ impl Action for Convert {
     }
 
     fn applicable(&self, kind: FileKind) -> bool {
-        kind != self.target && targets(kind).contains(&self.target)
+        kind != self.target
+            && targets(kind).contains(&self.target)
+            // Writing HEIC needs Microsoft's HEVC encoder, which may not be installed.
+            && (self.target != Heic || imaging::can_encode(Heic))
     }
 
-    fn run(&self, _input: &Path, _opts: &Options, _out: &Path) -> Result<PathBuf> {
-        Err(Error::NotAvailable {
-            action: format!("Converting to {}", self.label()),
-        })
+    fn run(&self, input: &Path, opts: &Options, out: &Path) -> Result<PathBuf> {
+        if opts.params != Params::None {
+            return Err(Error::InvalidOptions("conversions take no settings".into()));
+        }
+        let kind = FileKind::detect(input)?;
+        if !self.applicable(kind) {
+            return Err(Error::Unsupported {
+                action: "This conversion",
+                kind,
+            });
+        }
+        if !kind.is_image() || !self.target.is_image() {
+            return Err(Error::NotAvailable {
+                action: format!("Converting {} to {}", kind.label(), self.label()),
+            });
+        }
+        let (_, decoded) = support::load(input, opts)?;
+        let encode = EncodeOptions {
+            quality: if self.target == Avif { 80 } else { 90 },
+            // Photos stay lossy in WebP; graphics stay pixel-exact.
+            lossless: !matches!(kind, Jpeg | Webp | Avif | Heic),
+            palette: None,
+            icc: decoded.icc.as_deref(),
+        };
+        support::save(
+            input,
+            out,
+            "converted",
+            &decoded.image,
+            self.target,
+            &encode,
+            opts,
+        )
     }
 }

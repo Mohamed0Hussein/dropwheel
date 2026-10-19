@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dropwheel</title>
+    <link rel="stylesheet" href="/src/styles/dialog.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="top">
+        <h1 id="title">…</h1>
+        <p class="top__subtitle" id="subtitle" dir="ltr"></p>
+      </header>
+      <main class="main">
+        <section class="stage" id="stage" aria-label="Preview"></section>
+        <aside class="panel" id="panel"></aside>
+      </main>
+      <footer class="bottom">
+        <div class="status" id="status" aria-live="polite"></div>
+        <div class="progress" id="progress" hidden><div class="progress__bar" id="progress-bar"></div></div>
+        <div class="buttons">
+          <button type="button" id="close">Close</button>
+          <button type="button" id="apply" class="primary" disabled>Apply</button>
+        </div>
+      </footer>
+    </div>
+    <script type="module" src="/src/dialog/main.ts"></script>
+  </body>
+</html>

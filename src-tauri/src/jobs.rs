@@ -1,14 +1,15 @@
-//! Runs an action over the dropped files on a background thread, reporting progress
-//! and the outcome as events.
+//! Runs an action over files on a background thread, reporting progress and the outcome
+//! as events.
 
+use std::collections::HashMap;
 use std::panic::{self, AssertUnwindSafe};
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Mutex, PoisonError};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use dropwheel_core::{Action, Error, Options, paths};
+use dropwheel_core::{Action, CancelFlag, Error, Options, Params, paths};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, Runtime};
 
@@ -21,7 +22,36 @@ pub const FINISHED_EVENT: &str = "job:finished";
 /// Progress events are capped at about 30 a second.
 const PROGRESS_INTERVAL: Duration = Duration::from_millis(33);
 
-static NEXT_JOB: AtomicU64 = AtomicU64::new(1);
+/// Cancel flags of the jobs still running.
+#[derive(Default)]
+pub struct Jobs {
+    next: AtomicU64,
+    running: Mutex<HashMap<u64, CancelFlag>>,
+}
+
+impl Jobs {
+    pub fn cancel(&self, job_id: u64) -> bool {
+        let running = self.running.lock().unwrap_or_else(PoisonError::into_inner);
+        running.get(&job_id).map(CancelFlag::cancel).is_some()
+    }
+
+    fn begin(&self) -> (u64, CancelFlag) {
+        let id = self.next.fetch_add(1, Ordering::Relaxed) + 1;
+        let flag = CancelFlag::default();
+        self.running
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .insert(id, flag.clone());
+        (id, flag)
+    }
+
+    fn end(&self, job_id: u64) {
+        self.running
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .remove(&job_id);
+    }
+}
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -45,13 +75,22 @@ struct Progress {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Finished {
-    job_id: u64,
-    outputs: Vec<String>,
-    failures: Vec<Failure>,
+    pub job_id: u64,
+    pub outputs: Vec<Output>,
+    pub failures: Vec<Failure>,
+    pub cancelled: bool,
     /// A few words for the shelf, such as "Saved 3 files".
-    summary: String,
+    pub summary: String,
     /// The full story for a tooltip or notification.
-    detail: String,
+    pub detail: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Output {
+    pub path: String,
+    pub bytes: u64,
+    pub input_bytes: u64,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -67,42 +106,64 @@ pub fn start<R: Runtime>(
     app: &AppHandle<R>,
     action: &'static dyn Action,
     files: Vec<PathBuf>,
+    params: Params,
 ) -> u64 {
-    let job_id = NEXT_JOB.fetch_add(1, Ordering::Relaxed);
+    let Some(jobs) = app.try_state::<Jobs>() else {
+        log::error!("job registry missing");
+        return 0;
+    };
+    let (job_id, cancel) = jobs.begin();
     let output_dir = app
         .try_state::<SettingsStore>()
         .and_then(|s| s.get().output_dir);
     let worker_app = app.clone();
     let spawned = thread::Builder::new()
         .name(format!("job-{job_id}"))
-        .spawn(move || run(&worker_app, job_id, action, &files, output_dir.as_deref()));
+        .spawn(move || {
+            let job = Job {
+                id: job_id,
+                action,
+                params,
+                cancel,
+            };
+            run(&worker_app, &job, &files, output_dir.as_deref());
+            if let Some(jobs) = worker_app.try_state::<Jobs>() {
+                jobs.end(job_id);
+            }
+        });
     if let Err(err) = spawned {
         log::error!("could not start job {job_id}: {err}");
+        jobs.end(job_id);
         let failures = vec![Failure {
             file: String::new(),
             code: "internal",
             message: format!("Could not start: {err}"),
         }];
-        emit(app, FINISHED_EVENT, finished(job_id, Vec::new(), failures));
+        emit(
+            app,
+            FINISHED_EVENT,
+            finished(job_id, Vec::new(), failures, false),
+        );
     }
     job_id
 }
 
-fn run<R: Runtime>(
-    app: &AppHandle<R>,
-    job_id: u64,
+struct Job {
+    id: u64,
     action: &'static dyn Action,
-    files: &[PathBuf],
-    output_dir: Option<&Path>,
-) {
+    params: Params,
+    cancel: CancelFlag,
+}
+
+fn run<R: Runtime>(app: &AppHandle<R>, job: &Job, files: &[PathBuf], output_dir: Option<&Path>) {
     let total = files.len();
-    log::info!("job {job_id}: {} on {total} file(s)", action.id());
+    log::info!("job {}: {} on {total} file(s)", job.id, job.action.id());
     emit(
         app,
         STARTED_EVENT,
         Started {
-            job_id,
-            action: action.label(),
+            job_id: job.id,
+            action: job.action.label(),
             total,
         },
     );
@@ -110,11 +171,19 @@ fn run<R: Runtime>(
     let mut outputs = Vec::new();
     let mut failures = Vec::new();
     for (done, input) in files.iter().enumerate() {
-        let opts = progress_reporter(app, job_id, done, total);
-        match run_one(action, input, &opts, output_dir) {
-            Ok(path) => outputs.push(path),
+        if job.cancel.is_cancelled() {
+            break;
+        }
+        let opts = options_for(app, job, done, total);
+        match run_one(job.action, input, &opts, output_dir) {
+            Ok(path) => outputs.push(Output {
+                bytes: file_size(&path),
+                input_bytes: file_size(input),
+                path: paths::display(&path),
+            }),
+            Err(Error::Cancelled) => break,
             Err(err) => {
-                log::warn!("job {job_id}: {}: {err}", input.display());
+                log::warn!("job {}: {}: {err}", job.id, input.display());
                 failures.push(Failure {
                     file: paths::display(input),
                     code: err.code(),
@@ -126,7 +195,7 @@ fn run<R: Runtime>(
             app,
             PROGRESS_EVENT,
             Progress {
-                job_id,
+                job_id: job.id,
                 done: done + 1,
                 total,
                 fraction: (done + 1) as f32 / total as f32,
@@ -134,9 +203,13 @@ fn run<R: Runtime>(
         );
     }
 
-    let report = finished(job_id, outputs, failures);
-    log::info!("job {job_id}: {}", report.summary);
+    let report = finished(job.id, outputs, failures, job.cancel.is_cancelled());
+    log::info!("job {}: {}", job.id, report.summary);
     emit(app, FINISHED_EVENT, report);
+}
+
+fn file_size(path: &Path) -> u64 {
+    std::fs::metadata(path).map(|m| m.len()).unwrap_or(0)
 }
 
 /// Runs the action on one file. A panic inside it is a bug, but it must cost one file,
@@ -169,15 +242,11 @@ fn run_one(
     )
 }
 
-fn progress_reporter<R: Runtime>(
-    app: &AppHandle<R>,
-    job_id: u64,
-    done: usize,
-    total: usize,
-) -> Options {
+fn options_for<R: Runtime>(app: &AppHandle<R>, job: &Job, done: usize, total: usize) -> Options {
     let app = app.clone();
+    let job_id = job.id;
     let last = Mutex::new(Instant::now());
-    Options::default().with_progress(move |within| {
+    let mut opts = Options::new(job.params.clone()).with_progress(move |within| {
         let Ok(mut last) = last.lock() else {
             return;
         };
@@ -195,21 +264,45 @@ fn progress_reporter<R: Runtime>(
                 fraction: (done as f32 + within) / total as f32,
             },
         );
-    })
+    });
+    opts.cancel = job.cancel.clone();
+    opts
 }
 
-fn finished(job_id: u64, outputs: Vec<PathBuf>, failures: Vec<Failure>) -> Finished {
-    let (summary, detail) = describe(&outputs, &failures);
+fn finished(
+    job_id: u64,
+    outputs: Vec<Output>,
+    failures: Vec<Failure>,
+    cancelled: bool,
+) -> Finished {
+    let paths: Vec<&str> = outputs.iter().map(|o| o.path.as_str()).collect();
+    let (mut summary, detail) = describe(&paths, &failures);
+    if cancelled {
+        summary = if outputs.is_empty() {
+            "Cancelled".to_string()
+        } else {
+            format!("Cancelled after {}", plural(outputs.len(), "file"))
+        };
+    }
     Finished {
         job_id,
-        outputs: outputs.iter().map(|p| paths::display(p)).collect(),
+        outputs,
         failures,
+        cancelled,
         summary,
         detail,
     }
 }
 
-fn describe(outputs: &[PathBuf], failures: &[Failure]) -> (String, String) {
+fn plural(n: usize, word: &str) -> String {
+    if n == 1 {
+        format!("1 {word}")
+    } else {
+        format!("{n} {word}s")
+    }
+}
+
+fn describe(outputs: &[&str], failures: &[Failure]) -> (String, String) {
     let saved = outputs.len();
     let failed = failures.len();
     let summary = match (saved, failed) {
@@ -219,16 +312,12 @@ fn describe(outputs: &[PathBuf], failures: &[Failure]) -> (String, String) {
         (0, _) if failures.iter().all(|f| f.code == "not_available") => {
             "Not available yet".to_string()
         }
-        (0, _) if failures.iter().all(|f| f.code == "cancelled") => "Cancelled".to_string(),
         (0, 1) => "Failed".to_string(),
         (0, n) => format!("{n} files failed"),
         (ok, bad) => format!("{ok} saved, {bad} failed"),
     };
 
-    let mut lines: Vec<String> = outputs
-        .iter()
-        .map(|p| format!("Saved {}", paths::display(p)))
-        .collect();
+    let mut lines: Vec<String> = outputs.iter().map(|p| format!("Saved {p}")).collect();
     let mut messages: Vec<&str> = failures.iter().map(|f| f.message.as_str()).collect();
     messages.dedup();
     lines.extend(messages.into_iter().map(str::to_string));
@@ -255,8 +344,8 @@ mod tests {
 
     #[test]
     fn summaries() {
-        let out =
-            |n: usize| -> Vec<PathBuf> { (0..n).map(|i| PathBuf::from(format!("{i}"))).collect() };
+        let names = ["0", "1", "2"];
+        let out = |n: usize| -> Vec<&str> { names[..n].to_vec() };
         let na = || failure("not_available", "Compress is not available yet.");
         let bad = || failure("decode", "broken");
 
@@ -275,34 +364,51 @@ mod tests {
         let (_, detail) = describe(&[], &[na.clone(), na]);
         assert_eq!(detail, "Compress is not available yet.");
 
-        let (_, detail) = describe(
-            &[PathBuf::from("a_small.jpg")],
-            &[failure("locked", "busy")],
-        );
+        let (_, detail) = describe(&["a_small.jpg"], &[failure("locked", "busy")]);
         assert_eq!(detail, "Saved a_small.jpg\nbusy");
     }
 
     #[test]
-    fn panics_cost_one_file() {
-        struct Boom;
-        impl Action for Boom {
-            fn id(&self) -> &'static str {
-                "boom"
-            }
-            fn label(&self) -> &'static str {
-                "BOOM"
-            }
-            fn group(&self) -> dropwheel_core::ActionGroup {
-                dropwheel_core::ActionGroup::Tools
-            }
-            fn applicable(&self, _: dropwheel_core::FileKind) -> bool {
-                true
-            }
-            fn run(&self, _: &Path, _: &Options, _: &Path) -> dropwheel_core::Result<PathBuf> {
-                panic!("malformed input");
-            }
+    fn cancelled_summaries() {
+        let output = Output {
+            path: "a".into(),
+            bytes: 1,
+            input_bytes: 2,
+        };
+        assert_eq!(
+            finished(1, Vec::new(), Vec::new(), true).summary,
+            "Cancelled"
+        );
+        assert_eq!(
+            finished(1, vec![output], Vec::new(), true).summary,
+            "Cancelled after 1 file"
+        );
+    }
+
+    struct Fixed(fn() -> dropwheel_core::Result<PathBuf>);
+
+    impl Action for Fixed {
+        fn id(&self) -> &'static str {
+            "fixed"
         }
-        let err = run_one(&Boom, Path::new("/tmp/a.png"), &Options::default(), None).unwrap_err();
+        fn label(&self) -> &'static str {
+            "FIXED"
+        }
+        fn group(&self) -> dropwheel_core::ActionGroup {
+            dropwheel_core::ActionGroup::Tools
+        }
+        fn applicable(&self, _: dropwheel_core::FileKind) -> bool {
+            true
+        }
+        fn run(&self, _: &Path, _: &Options, _: &Path) -> dropwheel_core::Result<PathBuf> {
+            (self.0)()
+        }
+    }
+
+    #[test]
+    fn panics_cost_one_file() {
+        let boom = Fixed(|| panic!("malformed input"));
+        let err = run_one(&boom, Path::new("/tmp/a.png"), &Options::default(), None).unwrap_err();
         assert_eq!(err.code(), "internal");
     }
 

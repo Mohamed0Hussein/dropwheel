@@ -10,10 +10,15 @@
 pub mod action;
 pub mod actions;
 pub mod error;
+pub mod imaging;
 pub mod kind;
 pub mod output;
 pub mod paths;
 
-pub use action::{Action, ActionGroup, CancelFlag, Options, Params};
+pub use action::{
+    Action, ActionGroup, Background, CancelFlag, Compress, Crop, Edit, Options, Params,
+};
 pub use error::{Error, Result};
+/// Re-exported so the app uses the same version for decoded images.
+pub use image;
 pub use kind::FileKind;
