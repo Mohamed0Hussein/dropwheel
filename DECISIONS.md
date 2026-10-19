@@ -24,7 +24,8 @@ Choices made while building Dropwheel, with the reason for each. Newest phase la
 - **Vanilla TypeScript, Vite 8, TypeScript 6.** The UI is a few small windows. A framework
   would add more weight than it saves. TypeScript 7 (the native port) is new enough that I
   held back.
-- **Rust edition 2024, minimum Rust 1.90**, the same minimum Tauri needs.
+- **Rust edition 2024, minimum Rust 1.92.** Tauri needs 1.90; the PDF writer `krilla`
+  (phase 5) needs 1.92.
 - **The `ui/` folder has its own `package.json`.** Its `tauri` script runs the CLI from the
   workspace root (`cd .. && tauri`). The Tauri config starts Vite with `cwd: "../ui"`, so
   `cargo tauri dev` from `dropwheel/` and `npm run tauri dev` from `ui/` both work.
@@ -310,6 +311,58 @@ Choices made while building Dropwheel, with the reason for each. Newest phase la
   real files. Every broken file is run through every action, which must fail cleanly
   and leave no temporary files. AVIF and HEIC sources need Windows codecs and are not in
   the automated tests.
+
+## Phase 4: annotate and redact
+
+### Drawing
+
+- **Rust draws the annotations**, from shapes the dialog sends: boxes, arrows and text,
+  in the pixels of the upright full image. The alternative, rendering an overlay in the
+  browser and sending it as a picture, would tie the result to the WebView's canvas
+  limits and send megabytes over IPC. Shapes are small, testable, and scale to the other
+  files of a batch.
+- **`tiny-skia`** (BSD-3-Clause) strokes and fills the shapes, anti-aliased. It draws
+  straight into the image's own buffer. A transparent image is premultiplied first and
+  restored after, so its transparency survives.
+- **Text is shaped with `rustybuzz`** (MIT, a port of HarfBuzz), ordered with
+  `unicode-bidi` and drawn from the fonts' outlines. Arabic letters join and lines read
+  right to left. Mixed lines like "Dropwheel يعمل" come out in reading order.
+- **Fonts: Noto Sans and Noto Sans Arabic, Regular and Bold, are bundled** (1.6 MB,
+  SIL Open Font License 1.1). The OFL lets fonts ship inside software of any licence, as
+  long as the font files keep their licence, which sits next to them. Characters these
+  fonts lack fall back to fonts that come with Windows (Segoe UI for Hebrew, Microsoft
+  YaHei for Chinese, Malgun Gothic for Korean, Nirmala UI for Indian scripts, Leelawadee
+  UI for Thai and others). Those are only read and never redistributed.
+- **The dialog previews text in the same fonts**, loaded from the same files, with the
+  same line height (1.25) and per-line direction. Each line aligns to its own start, as
+  `unicode-bidi: plaintext` does. The geometry of arrows is one function written twice,
+  in Rust and TypeScript, with tests on both sides pinning the same numbers. A
+  side-by-side render of the dialog and of the saved file matched to the pixel row.
+- **The same layout code will set the PDFs of phase 5**: it wraps lines at the places
+  Unicode allows (`unicode-linebreak`, Apache-2.0) and splits words wider than a line.
+
+### Annotate
+
+- Tools: Select, Box, Arrow and Text, eight colours plus a picker, line thickness, text
+  size and bold. Defaults scale with the picture (a 4000 px photo gets 17 px lines and
+  168 px text), so they look the same on any image.
+- Text is typed in place. Enter finishes, Shift+Enter starts a new line and Esc
+  cancels. Double-click edits existing text. Select moves shapes, Delete removes them,
+  and Ctrl+Z undoes. A slider drag counts as one step.
+- Bold is on by default, since annotations sit on busy photos.
+
+### Redact
+
+- **Boxes are fractions of the page**, not pixels, so the same boxes fit files of any
+  size and, in phase 5, pages of any size. Each box has a page number; images have
+  page 0.
+- **Boxes round outwards to whole pixels**, so a pixel a box only partly covers is
+  blacked out too. A soft edge could leave readable traces.
+- **The redacted copy is encoded from the pixels**, with no EXIF (which can hold a
+  thumbnail of the unredacted picture), no XMP and no comments. Only the colour profile
+  is kept. A test checks the camera and GPS fields are gone.
+- PDF redaction comes with the PDF stack in phase 5. It rasterises each page, so no text
+  survives under a box.
 
 ## Open questions
 

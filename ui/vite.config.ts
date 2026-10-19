@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite";
+import { defineConfig, searchForWorkspaceRoot } from "vite";
 
 const page = (name: string) => fileURLToPath(new URL(`${name}.html`, import.meta.url));
 
@@ -10,6 +10,10 @@ export default defineConfig({
   server: {
     port: 1420,
     strictPort: true,
+    // The Annotate dialog previews text in the fonts the Rust side draws with.
+    fs: {
+      allow: [searchForWorkspaceRoot(process.cwd()), fileURLToPath(new URL("../crates/core/fonts", import.meta.url))],
+    },
   },
   build: {
     // WebView2 is evergreen Chromium.

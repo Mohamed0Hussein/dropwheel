@@ -2,17 +2,17 @@
 //!
 //! Actions that have not been implemented yet report [`crate::Error::NotAvailable`].
 
+pub mod annotate;
 mod background;
 pub mod compress;
 mod convert;
 pub mod crop;
 pub mod edit;
 pub mod metadata;
+pub mod redact;
 mod support;
-mod tools;
 
 pub use convert::{Convert, targets};
-pub use tools::Tool;
 
 use crate::action::Action;
 use crate::kind::FileKind;
@@ -31,8 +31,8 @@ static ALL: [&dyn Action; 17] = [
     &compress::COMPRESS,
     &crop::CROP,
     &edit::EDIT,
-    &tools::ANNOTATE,
-    &tools::REDACT,
+    &annotate::ANNOTATE,
+    &redact::REDACT,
     &metadata::METADATA,
     &background::ADD_BACKGROUND,
 ];
@@ -196,13 +196,11 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let png = dir.path().join("a.png");
         std::fs::write(&png, b"\x89PNG\r\n\x1a\n").unwrap();
-        for id in ["annotate", "redact", "convert.pdf"] {
-            let err = find(id)
-                .unwrap()
-                .run(&png, &Options::default(), dir.path())
-                .unwrap_err();
-            assert_eq!(err.code(), "not_available", "{id}");
-        }
+        let err = find("convert.pdf")
+            .unwrap()
+            .run(&png, &Options::default(), dir.path())
+            .unwrap_err();
+        assert_eq!(err.code(), "not_available");
     }
 
     #[test]

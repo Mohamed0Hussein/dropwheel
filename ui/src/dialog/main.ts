@@ -15,11 +15,13 @@ import {
   type JobProgress,
 } from "../lib/ipc";
 import { lockDownWebview } from "../lib/webview";
+import { annotatePanel } from "./annotate";
 import { backgroundPanel } from "./background";
 import { compressPanel } from "./compress";
 import { cropPanel } from "./crop";
 import { editPanel } from "./edit";
 import { metadataPanel } from "./metadata";
+import { redactPanel } from "./redact";
 import type { Panel, PanelFactory } from "./types";
 
 lockDownWebview();
@@ -28,6 +30,8 @@ const PANELS: Record<string, PanelFactory> = {
   compress: compressPanel,
   crop: cropPanel,
   edit: editPanel,
+  annotate: annotatePanel,
+  redact: redactPanel,
   metadata: metadataPanel,
   add_background: backgroundPanel,
 };

@@ -8,7 +8,8 @@ use std::path::Path;
 
 use dropwheel_core::actions::metadata;
 use dropwheel_core::{
-    Background, Compress, Crop, Edit, FileKind, Options, Params, actions, imaging,
+    Annotate, Background, Compress, Crop, Edit, FileKind, Options, Params, Redact, Region, Shape,
+    actions, imaging,
 };
 
 fn run(id: &str, input: &Path, params: Params) -> std::path::PathBuf {
@@ -108,6 +109,108 @@ fn background_fills_transparency() {
     assert!(!img.color().has_alpha());
     // The left edge was fully transparent: now black.
     assert_eq!(img.to_rgb8().get_pixel(0, 5).0, [0, 0, 0]);
+}
+
+#[test]
+fn annotations_are_drawn_on_the_upright_image() {
+    let (_dir, input) = common::staged("photo.jpg", None);
+    // A thick black outline around the white (bottom right) quadrant of the upright
+    // 64x48 picture, an arrow and a label.
+    let shapes = vec![
+        Shape::Rect {
+            x: 36.0,
+            y: 28.0,
+            width: 24.0,
+            height: 16.0,
+            color: [0, 0, 0],
+            stroke: 6.0,
+        },
+        Shape::Arrow {
+            from: [2.0, 2.0],
+            to: [30.0, 20.0],
+            color: [255, 255, 0],
+            stroke: 2.0,
+        },
+        Shape::Text {
+            x: 2.0,
+            y: 30.0,
+            text: "Hi مرحبا".into(),
+            color: [0, 0, 0],
+            size: 10.0,
+            bold: true,
+        },
+    ];
+    let out = run(
+        "annotate",
+        &input,
+        Params::Annotate(Annotate {
+            shapes,
+            ref_width: 64,
+            ref_height: 48,
+        }),
+    );
+    assert!(out.ends_with("photo_annotated.jpg"));
+    let img = common::decode(&out);
+    assert_eq!((img.width(), img.height()), (64, 48));
+    // On the outline's left edge: black, where it was white.
+    let edge = img.to_rgb8().get_pixel(36, 36).0;
+    assert!(edge.iter().all(|c| *c < 60), "{edge:?}");
+    // Inside the box, the picture shows through.
+    assert_eq!(common::quadrant(common::colour_at(&img, 46, 34)), "white");
+}
+
+#[test]
+fn redacted_areas_are_black_and_metadata_is_gone() {
+    let (_dir, input) = common::staged("photo.jpg", None);
+    // The whole top half of the upright picture.
+    let out = run(
+        "redact",
+        &input,
+        Params::Redact(Redact {
+            regions: vec![Region {
+                page: 0,
+                x: 0.0,
+                y: 0.0,
+                width: 1.0,
+                height: 0.5,
+            }],
+        }),
+    );
+    assert!(out.ends_with("photo_redacted.jpg"));
+    let img = common::decode(&out);
+    assert_eq!((img.width(), img.height()), (64, 48));
+    for (x, y) in [(4, 4), (40, 10), (58, 18)] {
+        let c = common::colour_at(&img, x, y);
+        assert!(c.iter().all(|v| *v < 16), "{x},{y}: {c:?}");
+    }
+    assert_eq!(common::quadrant(common::colour_at(&img, 4, 30)), "blue");
+    let fields = metadata::read(&out).unwrap();
+    assert!(
+        !fields
+            .iter()
+            .any(|f| f.name == "Make" || f.group == "Location"),
+        "{fields:#?}"
+    );
+
+    // PNG keeps its format and transparency outside the boxes.
+    let (_dir, input) = common::staged("alpha.png", None);
+    let out = run(
+        "redact",
+        &input,
+        Params::Redact(Redact {
+            regions: vec![Region {
+                page: 0,
+                x: 0.5,
+                y: 0.0,
+                width: 0.5,
+                height: 1.0,
+            }],
+        }),
+    );
+    assert!(out.ends_with("alpha_redacted.png"));
+    let img = common::decode(&out).to_rgba8();
+    assert_eq!(img.get_pixel(img.width() - 1, 0).0, [0, 0, 0, 255]);
+    assert_eq!(img.get_pixel(0, 5).0[3], 0);
 }
 
 #[test]

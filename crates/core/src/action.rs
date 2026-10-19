@@ -48,6 +48,8 @@ pub enum Params {
     Compress(Compress),
     Crop(Crop),
     Edit(Edit),
+    Annotate(Annotate),
+    Redact(Redact),
     Background(Background),
 }
 
@@ -86,6 +88,67 @@ pub struct Edit {
     pub grayscale: bool,
     pub brightness: i8,
     pub contrast: i8,
+}
+
+/// Shapes drawn over an image `ref_width` × `ref_height`, in its pixels. Applied to an
+/// image of another size, they are scaled to match.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Annotate {
+    pub shapes: Vec<Shape>,
+    pub ref_width: u32,
+    pub ref_height: u32,
+}
+
+/// One annotation. Colours are RGB; `stroke` and `size` are in pixels.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "shape", rename_all = "snake_case")]
+pub enum Shape {
+    /// An outline centred on the rectangle's edges.
+    Rect {
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+        color: [u8; 3],
+        stroke: f32,
+    },
+    /// A line from `from` ending in a filled head at `to`.
+    Arrow {
+        from: [f32; 2],
+        to: [f32; 2],
+        color: [u8; 3],
+        stroke: f32,
+    },
+    /// Text whose box has its top left corner at `x`, `y`. Lines break at `\n`.
+    Text {
+        x: f32,
+        y: f32,
+        text: String,
+        color: [u8; 3],
+        size: f32,
+        #[serde(default)]
+        bold: bool,
+    },
+}
+
+/// Areas to black out.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Redact {
+    pub regions: Vec<Region>,
+}
+
+/// A rectangle given as fractions of the upright page or image, so one set of regions
+/// fits files of any size.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct Region {
+    /// Counted from 0. Images only have page 0.
+    #[serde(default)]
+    pub page: u32,
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -206,6 +269,55 @@ mod tests {
             parse(r#"{"type":"background","color":[255,128,0]}"#),
             Params::Background(Background {
                 color: [255, 128, 0]
+            })
+        );
+        assert_eq!(
+            parse(
+                r#"{"type":"annotate","refWidth":10,"refHeight":20,"shapes":[
+                    {"shape":"rect","x":1,"y":2,"width":3,"height":4,"color":[255,0,0],"stroke":2},
+                    {"shape":"arrow","from":[0,0],"to":[5,5],"color":[0,0,0],"stroke":1.5},
+                    {"shape":"text","x":1,"y":1,"text":"مرحبا","color":[0,0,255],"size":12}
+                ]}"#
+            ),
+            Params::Annotate(Annotate {
+                ref_width: 10,
+                ref_height: 20,
+                shapes: vec![
+                    Shape::Rect {
+                        x: 1.0,
+                        y: 2.0,
+                        width: 3.0,
+                        height: 4.0,
+                        color: [255, 0, 0],
+                        stroke: 2.0
+                    },
+                    Shape::Arrow {
+                        from: [0.0, 0.0],
+                        to: [5.0, 5.0],
+                        color: [0, 0, 0],
+                        stroke: 1.5
+                    },
+                    Shape::Text {
+                        x: 1.0,
+                        y: 1.0,
+                        text: "مرحبا".into(),
+                        color: [0, 0, 255],
+                        size: 12.0,
+                        bold: false
+                    },
+                ],
+            })
+        );
+        assert_eq!(
+            parse(r#"{"type":"redact","regions":[{"x":0.1,"y":0.2,"width":0.3,"height":0.4}]}"#),
+            Params::Redact(Redact {
+                regions: vec![Region {
+                    page: 0,
+                    x: 0.1,
+                    y: 0.2,
+                    width: 0.3,
+                    height: 0.4
+                }]
             })
         );
         assert!(serde_json::from_str::<Params>(r#"{"type":"edit","brightness":300}"#).is_err());

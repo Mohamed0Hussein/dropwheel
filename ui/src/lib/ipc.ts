@@ -103,13 +103,32 @@ export interface Crop {
   refHeight: number;
 }
 
+export type Rgb = [number, number, number];
+
+/** Mirrors `Shape` in crates/core/src/action.rs. Lengths are in image pixels. */
+export type Shape =
+  | { shape: "rect"; x: number; y: number; width: number; height: number; color: Rgb; stroke: number }
+  | { shape: "arrow"; from: [number, number]; to: [number, number]; color: Rgb; stroke: number }
+  | { shape: "text"; x: number; y: number; text: string; color: Rgb; size: number; bold: boolean };
+
+/** A rectangle as fractions of the upright page or image. */
+export interface Region {
+  page: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 /** Mirrors `Params` in crates/core/src/action.rs. */
 export type Params =
   | { type: "none" }
   | ({ type: "compress" } & Compress)
   | ({ type: "crop" } & Crop)
   | ({ type: "edit" } & Edit)
-  | { type: "background"; color: [number, number, number] };
+  | { type: "annotate"; shapes: Shape[]; refWidth: number; refHeight: number }
+  | { type: "redact"; regions: Region[] }
+  | { type: "background"; color: Rgb };
 
 export interface DialogInfo {
   action: MenuAction;

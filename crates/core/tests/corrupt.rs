@@ -7,7 +7,8 @@ mod common;
 use std::time::Instant;
 
 use dropwheel_core::{
-    Background, Compress, Crop, Edit, FileKind, Options, Params, actions, imaging,
+    Annotate, Background, Compress, Crop, Edit, FileKind, Options, Params, Redact, Region, Shape,
+    actions, imaging,
 };
 
 const BROKEN: [&str; 6] = [
@@ -35,6 +36,27 @@ fn params_for(id: &str) -> Params {
             ..Edit::default()
         }),
         "add_background" => Params::Background(Background { color: [1, 2, 3] }),
+        "annotate" => Params::Annotate(Annotate {
+            shapes: vec![Shape::Rect {
+                x: 1.0,
+                y: 1.0,
+                width: 5.0,
+                height: 5.0,
+                color: [255, 0, 0],
+                stroke: 2.0,
+            }],
+            ref_width: 64,
+            ref_height: 48,
+        }),
+        "redact" => Params::Redact(Redact {
+            regions: vec![Region {
+                page: 0,
+                x: 0.1,
+                y: 0.1,
+                width: 0.2,
+                height: 0.2,
+            }],
+        }),
         _ => Params::None,
     }
 }

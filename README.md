@@ -10,10 +10,9 @@ Targets Windows 10 and 11, x64.
 
 ## Status
 
-**Phases 1 to 3 of 6 are done.** The shelf, tray and radial menu work, and the image
-actions are real: convert, compress, crop, edit, metadata and add background. Annotate
-and redact (phase 4) and the PDF, DOCX and TXT work (phase 5) still report "not available
-yet".
+**Phases 1 to 4 of 6 are done.** The shelf, tray and radial menu work, and every image
+action is real: convert, compress, crop, edit, annotate, redact, metadata and add
+background. The PDF, DOCX and TXT work (phase 5) still reports "not available yet".
 
 | Feature                                                                  | Status          |
 | ------------------------------------------------------------------------ | --------------- |
@@ -35,7 +34,8 @@ yet".
 | Edit: rotate, flip, grayscale, brightness, contrast, with a live preview | Done            |
 | Metadata: EXIF, location, PNG text, comments and XMP listed; remove all  | Done            |
 | Add a solid background behind transparency                               | Done            |
-| Annotate, redact                                                         | Phase 4         |
+| Annotate: boxes, arrows and text (Arabic too), with move, delete and undo | Done           |
+| Redact: solid black boxes; the copy carries no metadata                  | Done for images; PDF in phase 5 |
 | PDF, DOCX and TXT conversions; PDF compression                           | Phase 5         |
 | Editable settings, toasts, start with Windows                            | Phase 6         |
 | NSIS and MSI installers, portable .exe                                   | Builds now; polished in phase 6 |
@@ -69,15 +69,15 @@ them.
 | HEIC   | Windows, with the free "HEIF Image Extensions" | With Microsoft's paid "HEVC Video Extensions" | Without the encoder, the HEIC wedge is hidden and HEIC edits are saved as JPG. |
 
 Results are written next to the original as `name_converted.png`, `name_compressed.jpg`,
-`name_cropped.jpg`, `name_edited.jpg`, `name_clean.jpg` (metadata removed) or
-`name_background.png`. Nothing is ever overwritten: a second run gives
+`name_cropped.jpg`, `name_edited.jpg`, `name_annotated.jpg`, `name_redacted.jpg`,
+`name_clean.jpg` (metadata removed) or `name_background.png`. Nothing is ever overwritten: a second run gives
 `name_compressed (2).jpg`.
 
 ## Building
 
 ### Prerequisites (Windows)
 
-- [Rust](https://rustup.rs) stable, 1.90 or newer, with the MSVC toolchain. Install the
+- [Rust](https://rustup.rs) stable, 1.92 or newer, with the MSVC toolchain. Install the
   Visual Studio Build Tools with the "Desktop development with C++" workload.
 - [Node.js](https://nodejs.org) 20.19+ or 22.12+ (check with `node --version`; Vite needs
   it). `winget install OpenJS.NodeJS.LTS` installs the current LTS.
@@ -188,8 +188,10 @@ the input or replaces an existing file.
   that is not a supported platform.
 - The portable exe needs the WebView2 Runtime and keeps its settings in `%APPDATA%`, the
   same as the installed app.
-- Annotate and redact (phase 4) and every PDF, DOCX and TXT action (phase 5) still report
-  "not available yet".
+- Every PDF, DOCX and TXT action (phase 5) still reports "not available yet".
+- Annotation text uses the bundled Noto Sans and Noto Sans Arabic. Other scripts use
+  fonts that come with Windows (Segoe UI, Microsoft YaHei, Malgun Gothic, Nirmala UI and
+  others); emoji are drawn as plain glyphs where those fonts have them.
 - HEIC and AVIF are read through Windows' own codecs, which come from Microsoft Store
   extensions. Without them, opening those files fails with a message naming the
   extension to install. Writing HEIC needs the paid "HEVC Video Extensions".
@@ -208,8 +210,10 @@ the input or replaces an existing file.
 ## Credits
 
 This software is based in part on the work of the Independent JPEG Group (through the
-`jpeg-encoder` crate). WebP is written with Google's libwebp (BSD licence). Everything
-else is under permissive licences (MIT, Apache-2.0, BSD); `cargo tree` lists them.
+`jpeg-encoder` crate). WebP is written with Google's libwebp (BSD licence). The Noto Sans
+and Noto Sans Arabic fonts are © The Noto Project Authors, under the SIL Open Font
+License 1.1 (`crates/core/fonts/OFL-*.txt`). Everything else is under permissive
+licences (MIT, Apache-2.0, BSD); `cargo tree` lists them.
 
 ## Renaming
 

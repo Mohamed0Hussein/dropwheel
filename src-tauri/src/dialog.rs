@@ -1,5 +1,5 @@
-//! Windows for the actions that need settings: compress, crop, edit, metadata and add
-//! background. Each one remembers the files it was opened for.
+//! Windows for the actions that need settings: compress, crop, edit, annotate, redact,
+//! metadata and add background. Each one remembers the files it was opened for.
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -14,7 +14,7 @@ use crate::radial::DroppedFile;
 pub fn has_dialog(action_id: &str) -> bool {
     matches!(
         action_id,
-        "compress" | "crop" | "edit" | "metadata" | "add_background"
+        "compress" | "crop" | "edit" | "annotate" | "redact" | "metadata" | "add_background"
     )
 }
 

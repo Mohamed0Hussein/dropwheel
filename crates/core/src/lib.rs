@@ -14,9 +14,11 @@ pub mod imaging;
 pub mod kind;
 pub mod output;
 pub mod paths;
+pub mod text;
 
 pub use action::{
-    Action, ActionGroup, Background, CancelFlag, Compress, Crop, Edit, Options, Params,
+    Action, ActionGroup, Annotate, Background, CancelFlag, Compress, Crop, Edit, Options, Params,
+    Redact, Region, Shape,
 };
 pub use error::{Error, Result};
 /// Re-exported so the app uses the same version for decoded images.
