@@ -182,6 +182,14 @@ NSIS one also removes Dropwheel's registry entries on uninstall
 (`src-tauri/windows/hooks.nsh`) and can delete its settings and data if you tick the box.
 If WebView2 is missing, the installers download it.
 
+### Building the Windows app on Linux
+
+Without a Windows machine, `scripts/build-windows-on-linux.sh` cross-compiles with
+MinGW and makes the NSIS installer and a portable zip (see the script for the packages
+it needs). Such a build loads `WebView2Loader.dll` from beside the exe, which the MSVC
+build links in, so its portable form is the exe and that DLL together. The MSI needs
+Windows.
+
 ### Checks
 
 ```powershell
