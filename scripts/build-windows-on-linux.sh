@@ -25,9 +25,10 @@ OUT="target/$TARGET/release"
 node scripts/fetch-pdfium.mjs --platform win-x64
 (cd ui && npm run tauri build -- --target "$TARGET" --bundles nsis)
 
-loader=$(find "$OUT/build" -path '*webview2-com-sys-*/out/x64/WebView2Loader.dll' | head -n 1)
-if [[ -z "$loader" ]]; then
-  echo "WebView2Loader.dll not found under $OUT/build" >&2
+# Tauri copies the DLL next to the exe for MinGW builds.
+loader="$OUT/WebView2Loader.dll"
+if [[ ! -f "$loader" ]]; then
+  echo "$loader is missing" >&2
   exit 1
 fi
 # The workspace version, which Tauri uses too.
