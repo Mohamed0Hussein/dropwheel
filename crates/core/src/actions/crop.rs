@@ -62,7 +62,10 @@ impl Action for CropImage {
                 kind,
             });
         }
-        support::require_image(kind, "Cropping")?;
+        if kind == Pdf {
+            let bytes = crate::pdf::edit::crop(input, &crop, opts)?;
+            return crate::output::write_bytes(input, out, "cropped", "pdf", &bytes);
+        }
         let (kind, decoded) = support::load(input, opts)?;
         let (x, y, w, h) = fit(&crop, decoded.image.width(), decoded.image.height())?;
         let cropped = decoded.image.crop_imm(x, y, w, h);

@@ -57,3 +57,27 @@ pub fn quadrant(c: [u8; 3]) -> &'static str {
         .map(|(name, _)| *name)
         .unwrap()
 }
+
+/// Points the PDF engine at the library `scripts/fetch-pdfium.mjs` downloads. Tests that
+/// need it return early without it, unless `DROPWHEEL_REQUIRE_PDFIUM` is set, as in CI.
+pub fn pdfium() -> bool {
+    let name = if cfg!(windows) {
+        "pdfium.dll"
+    } else {
+        "libpdfium.so"
+    };
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../vendor/pdfium")
+        .join(name);
+    dropwheel_core::pdf::engine::set_library(path);
+    let ok = dropwheel_core::pdf::engine::available();
+    if !ok && std::env::var_os("DROPWHEEL_REQUIRE_PDFIUM").is_some() {
+        panic!("PDFium is required but missing; run scripts/fetch-pdfium.mjs");
+    }
+    ok
+}
+
+/// The text of a PDF, as Dropwheel reads it.
+pub fn pdf_text(path: &Path) -> String {
+    dropwheel_core::pdf::read::text(path, &dropwheel_core::Options::default()).unwrap()
+}

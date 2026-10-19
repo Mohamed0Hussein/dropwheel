@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use super::support;
+use super::{documents, support};
 use crate::action::{Action, ActionGroup, Options, Params};
 use crate::error::{Error, Result};
 use crate::imaging::{self, EncodeOptions};
@@ -81,10 +81,11 @@ impl Action for Convert {
                 kind,
             });
         }
-        if !kind.is_image() || !self.target.is_image() {
-            return Err(Error::NotAvailable {
-                action: format!("Converting {} to {}", kind.label(), self.label()),
-            });
+        match (kind.is_image(), self.target.is_image()) {
+            (true, true) => {}
+            (true, false) => return documents::image_to_pdf(input, kind, opts, out),
+            (false, true) => return documents::pdf_to_images(input, self.target, opts, out),
+            (false, false) => return documents::document(input, kind, self.target, opts, out),
         }
         let (_, decoded) = support::load(input, opts)?;
         let encode = EncodeOptions {

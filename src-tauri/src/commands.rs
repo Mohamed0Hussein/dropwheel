@@ -7,7 +7,7 @@
 use std::sync::Arc;
 
 use dropwheel_core::actions::{self, compress, metadata};
-use dropwheel_core::{Compress, FileKind, Params};
+use dropwheel_core::{Compress, FileKind, Params, pdf};
 use serde::Serialize;
 use tauri::ipc::Response;
 use tauri::{AppHandle, Manager, State, WebviewWindow};
@@ -116,13 +116,14 @@ pub fn dialog_info(
     })
 }
 
-/// Decodes (or reuses) the preview of file `index` of this dialog, off the main thread.
-async fn preview(window: &WebviewWindow, index: usize) -> CommandResult<Arc<Preview>> {
+/// Decodes (or reuses) the preview of page `page` of file `index` of this dialog, off
+/// the main thread.
+async fn preview(window: &WebviewWindow, index: usize, page: u32) -> CommandResult<Arc<Preview>> {
     let ctx = context(window, &window.state::<Dialogs>())?;
     let file = ctx.files.get(index).ok_or("No such file.")?;
     let path = file.path.clone();
     let app = window.app_handle().clone();
-    tauri::async_runtime::spawn_blocking(move || app.state::<Previews>().get(&path))
+    tauri::async_runtime::spawn_blocking(move || app.state::<Previews>().get(&path, page))
         .await
         .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())
@@ -133,9 +134,12 @@ async fn preview(window: &WebviewWindow, index: usize) -> CommandResult<Arc<Prev
 pub struct ImageInfo {
     kind: FileKind,
     kind_label: &'static str,
-    /// The full image, upright.
+    /// The full image, upright; for a PDF, the page in points.
     width: u32,
     height: u32,
+    pages: u32,
+    /// "px" for images, "pt" for PDF pages.
+    unit: &'static str,
     bytes: u64,
     preview_width: u32,
     preview_height: u32,
@@ -143,13 +147,19 @@ pub struct ImageInfo {
 }
 
 #[tauri::command]
-pub async fn image_info(window: WebviewWindow, index: usize) -> CommandResult<ImageInfo> {
-    let p = preview(&window, index).await?;
+pub async fn image_info(
+    window: WebviewWindow,
+    index: usize,
+    page: Option<u32>,
+) -> CommandResult<ImageInfo> {
+    let p = preview(&window, index, page.unwrap_or(0)).await?;
     Ok(ImageInfo {
         kind: p.kind,
         kind_label: p.kind.label(),
         width: p.width,
         height: p.height,
+        pages: p.pages,
+        unit: if p.kind == FileKind::Pdf { "pt" } else { "px" },
         bytes: p.file_bytes,
         preview_width: p.image.width(),
         preview_height: p.image.height(),
@@ -159,8 +169,12 @@ pub async fn image_info(window: WebviewWindow, index: usize) -> CommandResult<Im
 
 /// The preview's encoded bytes, sent as binary rather than JSON.
 #[tauri::command]
-pub async fn image_preview(window: WebviewWindow, index: usize) -> CommandResult<Response> {
-    let p = preview(&window, index).await?;
+pub async fn image_preview(
+    window: WebviewWindow,
+    index: usize,
+    page: Option<u32>,
+) -> CommandResult<Response> {
+    let p = preview(&window, index, page.unwrap_or(0)).await?;
     Ok(Response::new(p.encoded.clone()))
 }
 
@@ -177,7 +191,29 @@ pub async fn estimate_compress(
     window: WebviewWindow,
     target: Compress,
 ) -> CommandResult<EstimateInfo> {
-    let p = preview(&window, 0).await?;
+    let ctx = context(&window, &window.state::<Dialogs>())?;
+    let first = ctx.files.first().ok_or("No such file.")?;
+    if first.kind == FileKind::Pdf {
+        let path = first.path.clone();
+        return tauri::async_runtime::spawn_blocking(move || {
+            let original = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
+            pdf::edit::estimate(&path, target).map(|bytes| EstimateInfo {
+                original,
+                estimate: compress::Estimate {
+                    bytes,
+                    percent: match target {
+                        Compress::Quality { percent } => percent,
+                        Compress::Size { .. } => 0,
+                    },
+                    scale: 1.0,
+                },
+            })
+        })
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string());
+    }
+    let p = preview(&window, 0, 0).await?;
     let estimate = tauri::async_runtime::spawn_blocking(move || {
         compress::estimate(&p.image, p.width, p.height, p.kind, target).map(|estimate| {
             EstimateInfo {

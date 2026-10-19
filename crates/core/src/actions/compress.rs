@@ -209,7 +209,11 @@ impl Action for CompressImage {
                 kind,
             });
         }
-        support::require_image(kind, "Compressing")?;
+        if kind == Pdf {
+            let bytes = crate::pdf::edit::compress(input, target, opts)?;
+            opts.check_cancelled()?;
+            return output::write_bytes(input, out, "compressed", "pdf", &bytes);
+        }
         let (kind, decoded) = support::load(input, opts)?;
         let icc = decoded.icc.as_deref();
 

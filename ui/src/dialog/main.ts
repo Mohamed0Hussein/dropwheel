@@ -128,7 +128,9 @@ async function start(): Promise<void> {
     return;
   }
 
-  const loaded = await loadPreview();
+  // Word and text files have no picture to show; their dialogs do without one.
+  const previewable = first !== undefined && first.kind !== "docx" && first.kind !== "txt";
+  const loaded = previewable ? await loadPreview() : null;
   panel = await factory({
     info,
     image: loaded?.image ?? null,

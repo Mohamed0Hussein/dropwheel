@@ -1,5 +1,6 @@
 //! Word documents (DOCX): a zip of XML parts tied together by relationship files.
 
+pub mod meta;
 pub mod read;
 pub mod write;
 

@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use image::DynamicImage;
 
 use crate::action::Options;
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::imaging::{self, Decoded, EncodeOptions};
 use crate::kind::FileKind;
 use crate::output;
@@ -18,18 +18,6 @@ pub fn load(input: &Path, opts: &Options) -> Result<(FileKind, Decoded)> {
     opts.check_cancelled()?;
     opts.report(0.4);
     Ok((kind, decoded))
-}
-
-/// Tools registered for documents only work on images until phase 5 brings PDF and DOCX
-/// support.
-pub fn require_image(kind: FileKind, what: &str) -> Result<()> {
-    if kind.is_image() {
-        Ok(())
-    } else {
-        Err(Error::NotAvailable {
-            action: format!("{what} {} files", kind.label()),
-        })
-    }
 }
 
 /// How to write an edited image back in its own format, close to its original quality.

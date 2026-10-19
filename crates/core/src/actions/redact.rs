@@ -83,6 +83,27 @@ pub fn black_out(image: DynamicImage, regions: &[Region], page: u32) -> DynamicI
     }
 }
 
+/// Redacts a PDF by turning each page into a picture with the boxes painted in, so no
+/// text, vector or hidden layer survives under them. The copy's text can no longer be
+/// selected.
+fn redact_pdf(input: &Path, regions: &[Region], opts: &Options, out: &Path) -> Result<PathBuf> {
+    let sizes = crate::pdf::page_sizes(input)?;
+    let mut pages = Vec::with_capacity(sizes.len());
+    crate::pdf::render_pages(input, PAGE_DPI, opts, |i, _, image| {
+        let page = u32::try_from(i).unwrap_or(u32::MAX);
+        let painted = black_out(DynamicImage::ImageRgb8(image), regions, page).into_rgb8();
+        let (w, h) = sizes.get(i).copied().unwrap_or((595.0, 842.0));
+        pages.push((painted, w, h));
+        Ok(())
+    })?;
+    let bytes = super::documents::pages_to_pdf(pages, opts)?;
+    opts.check_cancelled()?;
+    crate::output::write_bytes(input, out, "redacted", "pdf", &bytes)
+}
+
+/// Redacted PDF pages are pictures this sharp.
+const PAGE_DPI: f32 = 200.0;
+
 impl Action for RedactFile {
     fn id(&self) -> &'static str {
         "redact"
@@ -115,7 +136,9 @@ impl Action for RedactFile {
                 kind,
             });
         }
-        support::require_image(kind, "Redacting")?;
+        if kind == Pdf {
+            return redact_pdf(input, &redact.regions, opts, out);
+        }
         let (kind, decoded) = support::load(input, opts)?;
         let redacted = black_out(decoded.image, &redact.regions, 0);
         opts.report(0.7);

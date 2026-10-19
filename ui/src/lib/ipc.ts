@@ -139,9 +139,12 @@ export interface DialogInfo {
 export interface ImageInfo {
   kind: FileKind;
   kindLabel: string;
-  /** The full image, upright. */
+  /** The full image, upright; for a PDF, the page in points. */
   width: number;
   height: number;
+  /** Pages in the file; 1 for images. */
+  pages: number;
+  unit: "px" | "pt";
   bytes: number;
   previewWidth: number;
   previewHeight: number;
@@ -175,8 +178,8 @@ export const openDialog = (dropId: number, actionId: string) =>
   invoke<void>("open_dialog", { dropId, actionId });
 
 export const dialogInfo = () => invoke<DialogInfo>("dialog_info");
-export const imageInfo = (index: number) => invoke<ImageInfo>("image_info", { index });
-export const imagePreview = (index: number) => invoke<ArrayBuffer>("image_preview", { index });
+export const imageInfo = (index: number, page = 0) => invoke<ImageInfo>("image_info", { index, page });
+export const imagePreview = (index: number, page = 0) => invoke<ArrayBuffer>("image_preview", { index, page });
 export const estimateCompress = (target: Compress) => invoke<Estimate>("estimate_compress", { target });
 export const readMetadata = (index: number) => invoke<MetadataField[]>("read_metadata", { index });
 export const dialogRun = (params: Params) => invoke<number>("dialog_run", { params });

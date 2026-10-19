@@ -4,6 +4,7 @@
 mod commands;
 mod dialog;
 mod jobs;
+mod pdfium;
 mod platform;
 mod previews;
 mod radial;
@@ -65,6 +66,7 @@ fn run() -> anyhow::Result<()> {
             app.manage(jobs::Jobs::default());
             app.manage(dialog::Dialogs::default());
             app.manage(previews::Previews::default());
+            pdfium::install(app.handle());
             tray::create(app.handle())?;
             radial::create(app.handle())?;
             shelf::create(app.handle())?;

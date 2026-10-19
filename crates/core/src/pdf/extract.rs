@@ -287,8 +287,35 @@ pub fn page_text(page: &PdfPage) -> PageText {
         }
     }
 
+    merge_fragments(&mut lines, &mut extents);
     out.lines = lines.into_iter().filter_map(build_line).collect();
     out
+}
+
+/// Joins pieces of one line that PDFium handed over out of order: same height, close
+/// together. The earlier piece keeps its place.
+fn merge_fragments(lines: &mut Vec<Vec<Glyph>>, extents: &mut Vec<Box2>) {
+    let mut i = 0;
+    while i < lines.len() {
+        let mut j = i + 1;
+        while j < lines.len() {
+            let (a, b) = (extents[i], extents[j]);
+            let size = a.height().max(b.height()).max(1.0);
+            let same_height =
+                ((a.top + a.bottom) / 2.0 - (b.top + b.bottom) / 2.0).abs() <= 0.35 * size;
+            let gap = (b.left - a.right).max(a.left - b.right);
+            if same_height && gap <= 3.0 * size {
+                let moved = lines.remove(j);
+                extents.remove(j);
+                lines[i].extend(moved);
+                extents[i] = a.union(&b);
+                j = i + 1;
+            } else {
+                j += 1;
+            }
+        }
+        i += 1;
+    }
 }
 
 /// Sorts a line's glyphs into reading order and joins them into text.

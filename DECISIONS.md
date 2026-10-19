@@ -327,7 +327,8 @@ Choices made while building Dropwheel, with the reason for each. Newest phase la
 - **Text is shaped with `rustybuzz`** (MIT, a port of HarfBuzz), ordered with
   `unicode-bidi` and drawn from the fonts' outlines. Arabic letters join and lines read
   right to left. Mixed lines like "Dropwheel يعمل" come out in reading order.
-- **Fonts: Noto Sans and Noto Sans Arabic, Regular and Bold, are bundled** (1.6 MB,
+- **Fonts: Noto Sans and Noto Sans Arabic, Regular and Bold, are bundled** (Arabic
+  replaced by IBM Plex Sans Arabic in phase 5, see there) (1.6 MB,
   SIL Open Font License 1.1). The OFL lets fonts ship inside software of any licence, as
   long as the font files keep their licence, which sits next to them. Characters these
   fonts lack fall back to fonts that come with Windows (Segoe UI for Hebrew, Microsoft
@@ -364,6 +365,138 @@ Choices made while building Dropwheel, with the reason for each. Newest phase la
 - PDF redaction comes with the PDF stack in phase 5. It rasterises each page, so no text
   survives under a box.
 
+## Phase 5: PDF, DOCX and TXT
+
+### PDF libraries
+
+- **PDFium reads PDFs** (through `pdfium-render`, MIT/Apache): it renders pages, lists
+  their characters with positions and fonts, and opens nearly anything. It is the
+  engine in Chrome. The alternatives were weaker readers in pure Rust: `pdf-extract`
+  for text, and `hayro`, a young renderer.
+- **The PDFium binary comes from Benoit Blanchon's pdfium-binaries**, the standard
+  prebuilt PDFium, taken from the `pypdfium2` wheels on PyPI (build 8076). PyPI serves
+  them pinned, checksummed and from a stable URL. `scripts/fetch-pdfium.mjs` downloads
+  the wheel, checks its SHA-256, and extracts the library and its licences into
+  `vendor/pdfium` (not in Git). It runs as part of `npm run dev` and `npm run build`,
+  so `npm run tauri dev` and `npm run tauri build` need no extra step. CI runs it too,
+  and the tests require it there.
+- **PDFium is embedded in the exe** (7 MB). At startup the app writes it to
+  `%LOCALAPPDATA%\...\pdfium\<hash>\` if it is not already there byte for byte, and
+  loads it from there. The portable exe therefore stands alone, and the installers need
+  no extra files. A build without the download still works, without PDF actions.
+- **All PDFium calls go through one lock.** PDFium is not thread-safe, and dialogs
+  render previews while jobs run.
+- **New PDFs are written with `krilla`** (MIT/Apache), which embeds subsetted fonts with
+  their Unicode text, so the output is searchable and copyable. Dropwheel lays the text
+  out itself (see "Text" below) and hands krilla positioned glyphs. `printpdf`, from
+  the brief, is built on `lopdf` and has no text shaping, so Arabic would come out
+  unjoined.
+- **Existing PDFs are changed with `lopdf`** (MIT): crop boxes, picture recompression
+  and metadata removal edit the file in place and keep everything else, including
+  links, forms and text. Output is packed with object streams. lopdf decompresses
+  streams with a size limit, so a crafted file cannot exhaust memory.
+- **Password-protected PDFs are refused** for edits: lopdf would save them without the
+  protection. PDFium can read some of them, but Dropwheel says plainly why it stops.
+
+### Reading text from PDFs
+
+- **Lines are rebuilt from character positions.** PDFium's own plain text puts the
+  words of right-to-left text in different orders depending on the program that made
+  the PDF (tested with LibreOffice and krilla). Dropwheel takes PDFium's word breaks,
+  which are reliable, and orders words and letters itself: by where each glyph is drawn
+  from, left to right, then back into reading order with the Unicode bidirectional
+  algorithm. Lines are grouped by height and joined across gaps of up to three ems.
+  Mixed lines such as "Hello مرحبا بالعالم world" and "مرحبا Hello big world بالعالم"
+  come out right from both producers, and tests pin both.
+- **Ligatures and marks stay with their letters.** Characters sharing one glyph (a
+  ligature) keep their order, and PDFium's reversed lam-alef is turned back. Vowel
+  marks attach to the nearest letter. Presentation forms and Latin ligatures are
+  normalised to plain letters.
+- **Paragraphs for DOCX** join lines that follow closely in the same size and direction
+  when the line before ran to the margin; list markers start new paragraphs, and a
+  hyphen at a line end joins the word. Paragraphs at least 1.6, 1.3 or 1.12 times the
+  body size become headings 1 to 3, as does a short line that is all bold.
+- **Pictures in a PDF** are cut from the page rendered at 150 dpi, not extracted from the
+  file: that shows them as the page does (clipped, masked, recoloured), whatever their
+  internal format. A page with no text at all becomes a picture of the page.
+
+### Documents
+
+- **One small document model** (`doc.rs`) carries content between formats: paragraphs
+  with styled spans, headings, alignment, direction, list markers, tables, pictures and
+  page breaks. Each format reads into it and writes from it, so each conversion is one
+  reader and one writer.
+- **DOCX is read with `zip` and `quick-xml`** into a small XML tree, with limits on
+  nesting, element count and part size. Paragraph and character styles are resolved
+  through their `basedOn` chains, numbering through `numbering.xml` (bullets from symbol
+  fonts become "•"), and right-to-left paragraphs follow `w:bidi`. Text boxes,
+  hyperlinks, content controls, field results and tracked insertions are read; deleted
+  text, field codes and hidden text are not.
+- **DOCX is written by hand** in the element order the schema requires, with heading
+  styles, Calibri for Latin and Arial for Arabic. List markers are written as text with
+  a hanging indent rather than Word numbering, which keeps the writer small; the
+  document looks the same. Checked by opening the output with LibreOffice and
+  python-docx.
+- **TXT is decoded** by byte order mark, then as UTF-16 when every other byte is zero,
+  then UTF-8, then by `chardetng` (MIT/Apache), which picks Windows-1256 for Arabic and
+  Windows-1252 for Western text. Files over 32 MB are refused. Text output is UTF-8
+  without a byte order mark, with Windows line endings.
+- **Pages are A4 with one-inch margins** unless the DOCX says otherwise. Images become
+  A4 PDFs, as "Print to PDF" makes them, rather than pages the size of the photo, which
+  print badly.
+
+### Text
+
+- **IBM Plex Sans Arabic replaces Noto Sans Arabic** (both SIL OFL 1.1). Noto Sans
+  Arabic draws a letter's dots as separate glyphs, and PDF readers then put spaces
+  inside words when the text is copied. Plex has one glyph per letter, as do most
+  Arabic fonts; it was chosen over Vazirmatn, Cairo and Tajawal for its look beside Noto
+  Sans. The Annotate dialog previews with it too.
+- **Text layout handles mixed styles**: a paragraph's spans keep their own size and
+  weight through shaping and line breaking. Italic is drawn slanted (12°) since no italic
+  face is bundled; underline and strike-through are drawn as rules.
+
+### PDF tools
+
+- **Compress** recompresses pictures stored as JPEG or as uncompressed or Flate RGB and
+  grey: at the chosen quality, and below 90% with large pictures scaled down (to 1,120 px
+  on the long side at 10%, 3,680 px at 90%). A picture is replaced only when the result is
+  smaller. Thumbnails are dropped and the file is repacked. To a target size it halves
+  the quality range on real output, then scales pictures down further if even 10% is too
+  big, and returns the smallest it found. The dialog's estimate encodes small copies of
+  the pictures instead.
+- **Crop** sets every page's crop box to the same part of the page as displayed, rotated
+  pages included. It hides rather than deletes, which the dialog says, pointing to
+  Redact.
+- **Redact** renders each page at 200 dpi, paints the boxes, and writes the pages as
+  JPEG pictures at their original size. Nothing under a box survives, nor any text, so
+  the dialog says the copy cannot be searched. Boxes are per page; the dialog pages
+  through the PDF.
+- **Metadata** lists the document information (dates in readable form; PDF strings in
+  UTF-16 or PDFDocEncoding decoded), XMP and private application data, and removes all
+  three. For DOCX: core, app and custom properties, the thumbnail, and the names on
+  comments and tracked changes, which are blanked in place.
+
+### App
+
+- **PDF previews are rendered pages**, at most 1,600 px, with the page size in points as
+  the dialog's units, so crop and redact boxes are in points. Previews are cached per
+  page.
+- **Multi-page PDFs converted to images** go into a new folder, built under a temporary
+  name and renamed into place when complete, never replacing an existing one.
+
+### Tests
+
+- **New fixtures** (`make_documents.py`, using reportlab, pypdf, python-docx and
+  LibreOffice): a two-page PDF with a picture and properties, a scan, a rotated page, an
+  encrypted PDF, a truncated one, an Arabic PDF laid out by LibreOffice, a Word document
+  with headings, styles, lists, a table, a picture, a page break and Arabic, and text
+  files in UTF-8, UTF-16 and Windows-1256.
+- **One test per document conversion path** (25 in `tests/documents.rs`), the PDF tools,
+  and broken and protected files through every action.
+- **Debug builds keep line tables only**, without full debug information: the test
+  binaries had grown to over 300 MB each and filled the disk.
+
 ## Open questions
 
 - **Reading HEIC (phase 3).** Decided: Windows' codec. One option was to decode through Windows Imaging Component when the
@@ -377,9 +510,9 @@ Choices made while building Dropwheel, with the reason for each. Newest phase la
   is pure Rust (BSD-2-Clause). WIC can decode AVIF if Microsoft's AV1 extension is
   installed. All are permissive, so I will pick whichever builds most reliably and note it
   here.
-- **PDFium (phase 5).** `pdfium-render` needs `pdfium.dll` shipped with the app. The
-  prebuilt binaries are BSD-3-Clause/Apache-2.0, which is permissive and only requires
-  license notices.
+- **PDFium (phase 5).** Decided: bundled, embedded in the exe. Its licences (BSD and
+  the permissive licences of the libraries built into it) only ask for notices, which
+  are in `licenses/pdfium/` and the README credits.
 - **Writing HEIC (phase 3).** Decided: shown only when the encoder is installed. HEIC
   is in the menu as a Convert target, as the brief asks. But no free, permissively licensed HEVC encoder exists. Windows can encode HEIC
   through WIC only with Microsoft's "HEVC Video Extensions", a paid Store app. The

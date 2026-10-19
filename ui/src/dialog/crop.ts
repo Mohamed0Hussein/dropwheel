@@ -1,6 +1,6 @@
 import { h } from "../lib/dom";
 import type { PanelFactory } from "./types";
-import { section, unavailable } from "./widgets";
+import { hint, section, unavailable } from "./widgets";
 
 interface Rect {
   x: number;
@@ -43,8 +43,9 @@ export const cropPanel: PanelFactory = (ctx) => {
   ctx.stage.replaceChildren(h("div", { class: "crop" }, frame));
 
   // Panel.
-  const widthInput = h("input", { type: "number", min: 1, max: W, value: W, "aria-label": "Width in pixels" });
-  const heightInput = h("input", { type: "number", min: 1, max: H, value: H, "aria-label": "Height in pixels" });
+  const unitName = ctx.image.unit === "pt" ? "points" : "pixels";
+  const widthInput = h("input", { type: "number", min: 1, max: W, value: W, "aria-label": `Width in ${unitName}` });
+  const heightInput = h("input", { type: "number", min: 1, max: H, value: H, "aria-label": `Height in ${unitName}` });
   const position = h("p", { class: "hint" });
   const chips = h("div", { class: "chips", role: "radiogroup", "aria-label": "Aspect ratio" });
   for (const a of ASPECTS) {
@@ -65,11 +66,18 @@ export const cropPanel: PanelFactory = (ctx) => {
   ctx.panel.replaceChildren(
     section("Aspect ratio", chips),
     section(
-      "Size in pixels",
+      ctx.image.unit === "pt" ? "Size in points" : "Size in pixels",
       h("div", { class: "pair" }, h("label", {}, "W", widthInput), h("span", { "aria-hidden": "true" }, "×"), h("label", {}, "H", heightInput)),
       position,
     ),
     section("", reset),
+    ctx.image.kind === "pdf"
+      ? section(
+          "",
+          ctx.image.pages > 1 ? hint("Every page is cropped to the same part of it.") : null,
+          hint("The rest of the page is hidden, not deleted. To remove something for good, use Redact."),
+        )
+      : "",
   );
 
   /** The largest rectangle of `r` aspect that fits the image, centred on `around`. */

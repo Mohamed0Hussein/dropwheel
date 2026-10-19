@@ -4,9 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "npm run pdfium && vite",
+    "build": "npm run pdfium && tsc && vite build",
     "typecheck": "tsc",
+    "pdfium": "node ../scripts/fetch-pdfium.mjs",
     "tauri": "cd .. && tauri",
     "test": "node --test src/**/*.test.ts"
   },

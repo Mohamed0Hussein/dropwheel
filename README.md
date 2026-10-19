@@ -10,9 +10,9 @@ Targets Windows 10 and 11, x64.
 
 ## Status
 
-**Phases 1 to 4 of 6 are done.** The shelf, tray and radial menu work, and every image
-action is real: convert, compress, crop, edit, annotate, redact, metadata and add
-background. The PDF, DOCX and TXT work (phase 5) still reports "not available yet".
+**Phases 1 to 5 of 6 are done.** Every action in the menu works, for images, PDF, DOCX
+and TXT. Phase 6 (editable settings, Windows notifications, start with Windows and the
+installer polish) is next.
 
 | Feature                                                                  | Status          |
 | ------------------------------------------------------------------------ | --------------- |
@@ -35,8 +35,11 @@ background. The PDF, DOCX and TXT work (phase 5) still reports "not available ye
 | Metadata: EXIF, location, PNG text, comments and XMP listed; remove all  | Done            |
 | Add a solid background behind transparency                               | Done            |
 | Annotate: boxes, arrows and text (Arabic too), with move, delete and undo | Done           |
-| Redact: solid black boxes; the copy carries no metadata                  | Done for images; PDF in phase 5 |
-| PDF, DOCX and TXT conversions; PDF compression                           | Phase 5         |
+| Redact: solid black boxes; the copy carries no metadata; PDF pages too   | Done            |
+| Images to PDF; PDF pages to JPG, PNG, WEBP, BMP, TIFF                    | Done            |
+| PDF to DOCX and TXT, Arabic included; DOCX and TXT to each other and to PDF | Done         |
+| PDF compression (pictures recompressed), cropping (every page) and metadata | Done         |
+| DOCX metadata: properties, custom properties, thumbnail, reviewer names  | Done            |
 | Editable settings, toasts, start with Windows                            | Phase 6         |
 | NSIS and MSI installers, portable .exe                                   | Builds now; polished in phase 6 |
 
@@ -68,10 +71,29 @@ them.
 | AVIF   | Windows, with the free "AV1 Video Extension" | Yes | Encoding is slow on large images. |
 | HEIC   | Windows, with the free "HEIF Image Extensions" | With Microsoft's paid "HEVC Video Extensions" | Without the encoder, the HEIC wedge is hidden and HEIC edits are saved as JPG. |
 
+### Documents
+
+| From | To | How |
+| ---- | -- | --- |
+| Image | PDF | One A4 page, turned to suit the picture, the picture centred within half-inch margins and never enlarged past its size at 96 dpi. JPEGs go in as they are. |
+| PDF | JPG, PNG, WEBP, BMP, TIFF | Pages rendered at 200 dpi. One page gives one file; more give a folder, `name_pages`, with `name_page1.png` and so on. |
+| PDF | TXT | Each line as on the page, a blank line between paragraphs and pages. |
+| PDF | DOCX | Lines joined back into paragraphs, larger text as headings, bold and italic kept, pictures cut from the page. Pages with no text, such as scans, become a picture of the page. |
+| DOCX | PDF | Laid out afresh: headings, bold, italic, underline, colours, sizes, bullets and numbering, tables, pictures, page breaks and right-to-left paragraphs. |
+| DOCX | TXT | Paragraphs as lines, list markers kept, table cells separated by tabs. |
+| TXT | DOCX, PDF | One paragraph per line. UTF-8, UTF-16 and older encodings (such as Windows-1252 and Windows-1256 for Arabic) are recognised. |
+
+PDFs are written with searchable text in Noto Sans and IBM Plex Sans Arabic, with
+Windows fonts for other scripts. On PDFs, Compress recompresses the pictures (and below
+90% scales large ones down); Crop applies the same rectangle to every page; Redact turns
+every page into a picture with the boxes painted in; Metadata removes the document
+information, XMP and private application data. Password-protected PDFs are refused with
+a message saying so.
+
 Results are written next to the original as `name_converted.png`, `name_compressed.jpg`,
 `name_cropped.jpg`, `name_edited.jpg`, `name_annotated.jpg`, `name_redacted.jpg`,
-`name_clean.jpg` (metadata removed) or `name_background.png`. Nothing is ever overwritten: a second run gives
-`name_compressed (2).jpg`.
+`name_clean.jpg` (metadata removed) or `name_background.png`. Nothing is ever
+overwritten: a second run gives `name_compressed (2).jpg`.
 
 ## Building
 
@@ -99,6 +121,12 @@ If you have the Cargo subcommand (`cargo install tauri-cli --version "^2" --lock
 `cargo tauri dev` from `dropwheel/` does the same as the last line. Either way, the Vite
 dev server starts on port 1420 and the app reloads when Rust files change. The first run
 compiles for several minutes.
+
+Both `npm run tauri dev` and `npm run tauri build` first run `scripts/fetch-pdfium.mjs`,
+which downloads PDFium (about 4 MB, pinned and checked against a SHA-256) into
+`vendor/pdfium` once. The build embeds it in the exe. Without it, everything builds and
+runs, but PDF actions report that PDF support is missing. To fetch it by hand:
+`node scripts/fetch-pdfium.mjs`.
 
 To work on the menu without dragging files each time, list them in
 `DROPWHEEL_DEV_DROP`, separated by `;`. Development builds then open the menu for them in
@@ -129,6 +157,7 @@ toolsets.
 ### Checks
 
 ```powershell
+node scripts/fetch-pdfium.mjs   # once; the PDF tests skip themselves without it
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
@@ -153,7 +182,9 @@ dropwheel/
 │  │                   shelf, radial (the menu) and settings.
 │  ├─ src/lib/         Shared code: IPC types, wedge geometry, icons.
 │  └─ src/assets/      Icon sources (SVG).
-├─ scripts/            Icon generator.
+├─ scripts/            Icon generator; fetch-pdfium.mjs downloads PDFium.
+├─ vendor/pdfium/      PDFium, once downloaded (not in Git).
+├─ licenses/           Licences of PDFium and the libraries built into it.
 ├─ DECISIONS.md        Why things are the way they are.
 └─ README.md
 ```
@@ -181,6 +212,7 @@ the input or replaces an existing file.
 | `%APPDATA%\Dropwheel\settings.json.bad`                 | A settings file that could not be read, set aside |
 | `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\logs\` | Log files                    |
 | `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\EBWebView\` | WebView2 data          |
+| `%LOCALAPPDATA%\io.github.mohamed0hussein.dropwheel\pdfium\` | PDFium, written out of the exe on first start |
 
 ## Known limitations
 
@@ -188,10 +220,23 @@ the input or replaces an existing file.
   that is not a supported platform.
 - The portable exe needs the WebView2 Runtime and keeps its settings in `%APPDATA%`, the
   same as the installed app.
-- Every PDF, DOCX and TXT action (phase 5) still reports "not available yet".
-- Annotation text uses the bundled Noto Sans and Noto Sans Arabic. Other scripts use
-  fonts that come with Windows (Segoe UI, Microsoft YaHei, Malgun Gothic, Nirmala UI and
-  others); emoji are drawn as plain glyphs where those fonts have them.
+- Text is set in the bundled Noto Sans and IBM Plex Sans Arabic. Other scripts use fonts
+  that come with Windows (Segoe UI, Microsoft YaHei, Malgun Gothic, Nirmala UI and
+  others); emoji are drawn as plain glyphs where those fonts have them. Italics are
+  slanted Noto Sans, as no italic face is bundled.
+- PDF to DOCX rebuilds paragraphs from where the lines are; it does not recover tables,
+  columns or the exact layout. Text in two columns comes out column by column. Scanned
+  pages become pictures: there is no text recognition (OCR).
+- DOCX to PDF leaves out headers, footers, footnotes, comments, text effects and charts,
+  and uses the bundled fonts rather than the document's. Pictures in Windows metafile
+  formats (EMF, WMF) are skipped.
+- Cropping a PDF hides the rest of each page without deleting it, as PDF viewers'
+  own crop does. Redact is the way to remove content.
+- A redacted PDF's pages are pictures, so its text can no longer be selected or
+  searched, and the file is larger.
+- PDF compression only touches pictures stored as JPEG, or uncompressed and Flate
+  pictures in RGB or grey. Fonts and other content are packed but not rewritten.
+- Password-protected PDFs are refused rather than opened.
 - HEIC and AVIF are read through Windows' own codecs, which come from Microsoft Store
   extensions. Without them, opening those files fails with a message naming the
   extension to install. Writing HEIC needs the paid "HEVC Video Extensions".
@@ -210,8 +255,12 @@ the input or replaces an existing file.
 ## Credits
 
 This software is based in part on the work of the Independent JPEG Group (through the
-`jpeg-encoder` crate). WebP is written with Google's libwebp (BSD licence). The Noto Sans
-and Noto Sans Arabic fonts are © The Noto Project Authors, under the SIL Open Font
+`jpeg-encoder` crate and PDFium's libjpeg-turbo). WebP is written with Google's libwebp
+(BSD licence). PDFs are read with PDFium (BSD licence), in the build by Benoit Blanchon's
+pdfium-binaries; its licence and those of the libraries in it, including FreeType
+("Portions of this software are copyright © The FreeType Project, www.freetype.org.
+All rights reserved."), are in `licenses/pdfium/`. The Noto Sans fonts are © The Noto
+Project Authors and IBM Plex Sans Arabic is © IBM Corp., both under the SIL Open Font
 License 1.1 (`crates/core/fonts/OFL-*.txt`). Everything else is under permissive
 licences (MIT, Apache-2.0, BSD); `cargo tree` lists them.
 

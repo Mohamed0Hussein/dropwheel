@@ -28,6 +28,8 @@ pub struct Decoded {
     pub image: DynamicImage,
     /// The colour profile, carried over when writing JPEG or PNG.
     pub icc: Option<Vec<u8>>,
+    /// The pixels were turned or flipped to stand upright, so they differ from the file's.
+    pub reoriented: bool,
 }
 
 /// Whether [`decode`] can read `kind` on this platform. HEIC and AVIF go through Windows'
@@ -110,7 +112,11 @@ fn decode_with_image(path: &Path, kind: FileKind) -> Result<Decoded> {
     let icc = decoder.icc_profile().ok().flatten();
     let mut image = DynamicImage::from_decoder(decoder).map_err(failed)?;
     image.apply_orientation(orientation);
-    Ok(Decoded { image, icc })
+    Ok(Decoded {
+        image,
+        icc,
+        reoriented: orientation != Orientation::NoTransforms,
+    })
 }
 
 /// HEIF keeps rotation in container properties that the codec applies, so EXIF
@@ -135,6 +141,7 @@ fn decode_with_windows(path: &Path, kind: FileKind) -> Result<Decoded> {
     Ok(Decoded {
         image: DynamicImage::ImageRgba8(image),
         icc: None,
+        reoriented: false,
     })
 }
 

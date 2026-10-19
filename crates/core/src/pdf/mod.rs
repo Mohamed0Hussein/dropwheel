@@ -1,6 +1,7 @@
 //! PDF support. PDFium renders pages and reads their text, `krilla` writes new PDFs and
 //! `lopdf` changes existing ones.
 
+pub mod edit;
 pub mod engine;
 pub mod extract;
 pub mod layout;

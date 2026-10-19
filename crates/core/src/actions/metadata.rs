@@ -47,10 +47,22 @@ const MAX_VALUE_CHARS: usize = 300;
 /// A hostile file could hold millions of entries; nobody reads past this.
 const MAX_FIELDS: usize = 2000;
 
-/// The metadata of the image at `path`, for display. Documents are read in phase 5.
+/// The metadata of the file at `path`, for display.
 pub fn read(path: &Path) -> Result<Vec<Field>> {
     let kind = FileKind::detect(path)?;
-    support::require_image(kind, "Reading metadata of")?;
+    let rows = match kind {
+        Pdf => Some(crate::pdf::edit::metadata(path)?),
+        Docx => Some(crate::docx::meta::read(path)?),
+        _ => None,
+    };
+    if let Some(rows) = rows {
+        let mut fields: Vec<Field> = rows
+            .into_iter()
+            .map(|(group, name, value)| Field::new(group, name, value))
+            .collect();
+        fields.truncate(MAX_FIELDS);
+        return Ok(fields);
+    }
     let data = fs::read(path).map_err(|e| Error::io(path, e))?;
     let mut fields = exif_fields(&data);
     match kind {
@@ -267,8 +279,16 @@ impl Action for Metadata {
                 kind,
             });
         }
-        support::require_image(kind, "Removing metadata from")?;
         opts.check_cancelled()?;
+        let document = match kind {
+            Pdf => Some(crate::pdf::edit::strip_metadata(input, opts)?),
+            Docx => Some(crate::docx::meta::strip(input)?),
+            _ => None,
+        };
+        if let Some(bytes) = document {
+            opts.check_cancelled()?;
+            return output::write_bytes(input, out, "clean", kind.extension(), &bytes);
+        }
         if matches!(kind, Jpeg | Png | Webp) {
             let data = fs::read(input).map_err(|e| Error::io(input, e))?;
             let clean = strip_in_place(kind, data).map_err(|reason| Error::Decode {

@@ -8,6 +8,7 @@ const HINTS: Partial<Record<string, string>> = {
   png: "PNG is lossless. Below 90%, colours are reduced to a palette, which may show banding in photos.",
   tiff: "TIFF stays lossless. Choose a target size to make it smaller: the picture is scaled down to fit.",
   avif: "AVIF takes a while to encode, especially for large pictures.",
+  pdf: "Pictures in the PDF are recompressed, and below 90% large ones are scaled down. Text and drawings stay sharp.",
 };
 
 /** Wait this long after the slider stops before asking for a new estimate. */
@@ -52,7 +53,7 @@ export const compressPanel: PanelFactory = (ctx) => {
         if (ticket !== asked) return;
         let text = `≈ ${formatBytes(estimate.bytes)} (${formatChange(original, estimate.bytes)})`;
         if (estimate.scale < 0.999) text += `, scaled to ${Math.round(estimate.scale * 100)}%`;
-        if (mode === "size") text += ` at ${estimate.percent}% quality`;
+        if (mode === "size" && estimate.percent > 0) text += ` at ${estimate.percent}% quality`;
         estimateLine.textContent = text;
       } catch (err) {
         if (ticket === asked) estimateLine.textContent = String(err);

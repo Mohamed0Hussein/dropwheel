@@ -5,6 +5,7 @@ import { hint, section } from "./widgets";
 
 export const metadataPanel: PanelFactory = async (ctx) => {
   const files = ctx.info.files;
+  const document = files.some((f) => f.kind === "pdf" || f.kind === "docx");
   const table = h("div", { class: "meta" });
   const summary = h("p", { class: "meta__summary" });
   const warning = h("p", { class: "hint hint--warn" });
@@ -23,7 +24,11 @@ export const metadataPanel: PanelFactory = async (ctx) => {
     }
     found = fields.length;
     summary.textContent = found === 0 ? "No metadata found." : `${found} ${found === 1 ? "entry" : "entries"} found.`;
-    warning.textContent = fields.some((f) => f.group === "Location") ? "This file records where it was taken." : "";
+    warning.textContent = fields.some((f) => f.group === "Location")
+      ? "This file records where it was taken."
+      : fields.some((f) => f.group === "People" || f.name === "Author" || f.name === "Last saved by")
+        ? "This file names the people who worked on it."
+        : "";
     warning.hidden = !warning.textContent;
     if (found === 0) {
       table.replaceChildren(h("p", { class: "stage__message" }, "This file carries no metadata."));
@@ -54,7 +59,9 @@ export const metadataPanel: PanelFactory = async (ctx) => {
       "Metadata",
       summary,
       warning,
-      hint("Removing keeps the picture and its colour profile, and takes out camera details, location, dates, comments and editing history."),
+      document
+        ? hint("Removing takes out the document properties (author, title, dates, company), embedded XMP, custom properties and the names on comments and tracked changes. The content stays as it is.")
+        : hint("Removing keeps the picture and its colour profile, and takes out camera details, location, dates, comments and editing history."),
     ),
   );
   await show(0);

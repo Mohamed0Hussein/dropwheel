@@ -79,6 +79,79 @@ pub fn write_bytes(
     })
 }
 
+/// A folder of results being filled. It lives under a temporary name in the output
+/// directory and takes its real name, `<stem>_<suffix>`, only in [`NewFolder::finish`],
+/// so a failed or cancelled run leaves nothing behind.
+pub struct NewFolder {
+    temp: tempfile::TempDir,
+    dir: PathBuf,
+    out_dir: PathBuf,
+    stem: String,
+    suffix: String,
+}
+
+/// Starts a folder of results for `input` in `out_dir`.
+pub fn new_folder(input: &Path, out_dir: &Path, suffix: &str) -> Result<NewFolder> {
+    validate_part("suffix", suffix)?;
+    let stem = input
+        .file_stem()
+        .ok_or_else(|| {
+            Error::InvalidOptions(format!("\"{}\" is not a file.", paths::display(input)))
+        })?
+        .to_string_lossy()
+        .into_owned();
+    let dir = paths::extended(out_dir).map_err(|e| Error::io(out_dir, e))?;
+    fs::create_dir_all(&dir).map_err(|e| Error::io(out_dir, e))?;
+    let temp = tempfile::Builder::new()
+        .prefix(".dropwheel-")
+        .suffix(".tmp")
+        .tempdir_in(&dir)
+        .map_err(|e| Error::io(out_dir, e))?;
+    Ok(NewFolder {
+        temp,
+        dir,
+        out_dir: out_dir.to_path_buf(),
+        stem,
+        suffix: suffix.to_string(),
+    })
+}
+
+impl NewFolder {
+    /// Writes one file into the folder.
+    pub fn write(&self, name: &str, bytes: &[u8]) -> Result<()> {
+        validate_part("file name", name)?;
+        let path = self.temp.path().join(name);
+        fs::write(&path, bytes).map_err(|e| Error::io(&self.out_dir, e))
+    }
+
+    /// Gives the folder its name, adding ` (2)` and so on when it is taken.
+    pub fn finish(self) -> Result<PathBuf> {
+        for n in 1..=MAX_ATTEMPTS {
+            let name = file_name(&self.stem, &self.suffix, n, "x");
+            let name = name.strip_suffix(".x").unwrap_or(&name);
+            let target = self.dir.join(name);
+            // A rename replaces an empty folder on Unix, so look first.
+            if target.exists() {
+                continue;
+            }
+            match fs::rename(self.temp.path(), &target) {
+                Ok(()) => {
+                    let _ = self.temp.keep();
+                    return Ok(paths::strip_verbatim(&target));
+                }
+                Err(e) if e.kind() == ErrorKind::AlreadyExists || target.exists() => continue,
+                Err(e) => return Err(Error::io(paths::strip_verbatim(&target), e)),
+            }
+        }
+        Err(Error::InvalidOptions(format!(
+            "No free folder name for \"{}_{}\" in \"{}\".",
+            self.stem,
+            self.suffix,
+            paths::display(&self.out_dir)
+        )))
+    }
+}
+
 fn file_name(stem: &str, suffix: &str, n: u32, ext: &str) -> String {
     let counter = if n > 1 {
         format!(" ({n})")
@@ -179,6 +252,34 @@ mod tests {
         let err = write_new(&input, dir.path(), "x", "pdf", |_| Err(Error::Cancelled));
         assert!(matches!(err, Err(Error::Cancelled)));
         assert_eq!(names(dir.path()), ["doc.pdf"]);
+    }
+
+    #[test]
+    fn folders_appear_whole_and_never_replace() {
+        let dir = tempfile::tempdir().unwrap();
+        let input = dir.path().join("report.pdf");
+        let folder = new_folder(&input, dir.path(), "pages").unwrap();
+        folder.write("report_page1.png", b"1").unwrap();
+        // Nothing visible until it is finished.
+        assert!(
+            names(dir.path())
+                .iter()
+                .all(|n| n.starts_with(".dropwheel-"))
+        );
+        let first = folder.finish().unwrap();
+        assert_eq!(first, dir.path().join("report_pages"));
+        assert_eq!(fs::read(first.join("report_page1.png")).unwrap(), b"1");
+
+        let second = new_folder(&input, dir.path(), "pages")
+            .unwrap()
+            .finish()
+            .unwrap();
+        assert_eq!(second, dir.path().join("report_pages (2)"));
+
+        let abandoned = new_folder(&input, dir.path(), "pages").unwrap();
+        abandoned.write("x.png", b"x").unwrap();
+        drop(abandoned);
+        assert_eq!(names(dir.path()), ["report_pages", "report_pages (2)"]);
     }
 
     #[test]
