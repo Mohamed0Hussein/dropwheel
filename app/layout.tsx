@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import QueryProvider from "@/components/QueryProvider";
 import CustomCursor from "@/components/CustomCursor";
 import ReadingProgressBar from "@/components/ReadingProgressBar";
 
@@ -88,7 +87,7 @@ export default function RootLayout({
         <div className="noise" />
         <ReadingProgressBar />
         <CustomCursor />
-        <QueryProvider>{children}</QueryProvider>
+        {children}
       </body>
     </html>
   );
