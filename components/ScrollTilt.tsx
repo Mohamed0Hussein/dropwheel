@@ -27,9 +27,16 @@ import { motion, useMotionValue, useScroll, useTransform } from 'framer-motion';
 import { useEffect, useRef, type ReactNode } from 'react';
 
 /** Fold angle (deg) when a section's edge is at the very edge of the viewport. */
-const MAX_TILT = 32;
+const MAX_TILT = 45;
 /** Camera distance (px). Smaller = more dramatic foreshortening. */
-const PERSPECTIVE = 1100;
+const PERSPECTIVE = 1000;
+/**
+ * How far (fraction of viewport height, from the top) an entering section's
+ * top edge must rise before it is fully flat. Leaving mirrors this. Sections
+ * open and close with ~160px of empty padding and their content fades in on
+ * entry, so the fold has to run across most of the screen to be seen at all.
+ */
+const FLAT_AT = 0.1;
 
 interface ScrollTiltProps {
   children: ReactNode;
@@ -52,15 +59,15 @@ export default function ScrollTilt({ children, tiltIn = true, tiltOut = true }: 
     return () => mq.removeEventListener('change', sync);
   }, [enabled]);
 
-  // 0 → 1 while the top edge travels from the viewport bottom up to 35% height.
+  // 0 → 1 while the top edge travels from the viewport bottom up to FLAT_AT.
   const { scrollYProgress: enter } = useScroll({
     target: ref,
-    offset: ['start end', 'start 0.35'],
+    offset: ['start end', `start ${FLAT_AT}`],
   });
-  // 0 → 1 while the bottom edge travels from 65% height up to the viewport top.
+  // 0 → 1 while the bottom edge travels from (1 - FLAT_AT) up to the viewport top.
   const { scrollYProgress: exit } = useScroll({
     target: ref,
-    offset: ['end 0.65', 'end start'],
+    offset: [`end ${1 - FLAT_AT}`, 'end start'],
   });
 
   // Negative rotateX tips content below the hinge away from the viewer;
