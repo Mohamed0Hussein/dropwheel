@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { X, ExternalLink, Github, Layers, AlertTriangle, Sparkles, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { Project } from './Projects';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input, textarea, select, [tabindex]:not([tabindex="-1"])';
@@ -51,7 +52,10 @@ export default function ProjectDetailModal({
     };
   }, [onClose]);
 
-  return (
+  // Portal to <body>: the Projects section can be 3D-transformed by ScrollTilt,
+  // and a transformed ancestor would trap this `position: fixed` overlay
+  // inside the section instead of covering the viewport.
+  return createPortal(
     <motion.div
       className="fixed inset-0 z-[70] flex items-center justify-center p-4 md:p-8"
       style={{ background: 'rgba(2, 3, 8, 0.72)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
@@ -186,7 +190,8 @@ export default function ProjectDetailModal({
           </DetailSection>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 
